@@ -99,9 +99,7 @@ function PLAYCOMMENT() {
 			COMMENT = [];
 		}
 	});
-
 	observer.observe(document, {childList: true, subtree: true});
-
 	setTimeout(setup, 100);
 }
 
@@ -114,7 +112,6 @@ const logger = (msg) => {
 }
 
 window.onload = function () {
-
 	setTimeout(function () {
 		document.getElementsByClassName('VideoOverlayContainer')[0].insertAdjacentHTML('beforeend', `
         <div id='allcommentsetting' style='display: none;background-color:rgb(0,0,0,0.8);width:200px;height:100px;padding:2px;position:absolute;right:40px;bottom:0;'>
@@ -159,8 +156,8 @@ window.onload = function () {
 		pipVideoElement.onpause = () => {
 			pipVideoElement.play();
 		};
-
 		zouryouCanvasElement.id = 'zouryou_comment';
+
 		const setting = document.getElementById('allcommentsetting');
 		document.getElementById('AllCommentViewButton').addEventListener('click', () => {
 			if (setting.style.display === 'none') {
@@ -175,9 +172,7 @@ window.onload = function () {
 			CommentLimit = (num !== '') ? Number(num) : 20;
 			CommentLoadingScreenWrapper.style = 'width: 100%;position: absolute;height: 100%;background-color: #999;z-index: 6;opacity: 0.8;font-size:20px;color:black;overflow: scroll;top:0;left:0';
 			document.getElementById('zenkomebutton').disabled = true;
-			setTimeout(LOADCOMMENT, 2000)
-		}
-	}, 1000)
-
-
-}
+			setTimeout(LOADCOMMENT, 2000);
+		};
+	}, 1000);
+};
