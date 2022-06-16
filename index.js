@@ -24,8 +24,10 @@ function LOADCOMMENT() {
     logger(CommentLimit + "回読み込みます。");
 
     async function GET_COMMENT(TIME) {
-        const apiData = JSON.parse(document.getElementById("js-initial-watch-data").getAttribute("data-api-data"));
-        const threads = apiData.comment.threads
+        const smid = window.location.href.match(/https:\/\/www\.nicovideo\.jp\/watch\/([a-z]{2}?\d+)/)
+        const apiReq = await fetch(`https://www.nicovideo.jp/api/watch/v3/${smid[1]}?_frontendId=6&_frontendVersion=0&actionTrackId=a_0`);
+        const apiData = await apiReq.json();
+        const threads = apiData.data.comment.threads
 
         let params = {
             "thread": threads[1]["id"],
