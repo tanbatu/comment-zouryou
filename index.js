@@ -132,7 +132,7 @@ window.onload = function () {
         `);
 
 		let customStyle = document.createElement('style');
-		customStyle.innerHTML = '.CustomVideoContainer{width: 640px;height: 360px;}body.is-large:not(.is-fullscreen) .CustomVideoContainer {width: 854px;height: 480px;}body.is-fullscreen .CustomVideoContainer {width: 100vw !important;height: 100vh !important;}';
+		customStyle.innerHTML = '.CustomVideoContainer{width: 640px;height: 360px;}body.is-large:not(.is-fullscreen) .CustomVideoContainer {width: 854px;height: 480px;}body.is-fullscreen .CustomVideoContainer {width: 100vw !important;height: 100vh !important;}@media screen and (min-width: 1286px) and (min-height: 590px){body.is-autoResize:not(.is-fullscreen) .CustomVideoContainer {width: 854px;height: 480px;}@media screen and (min-width: 1392px) and (min-height: 650px){body.is-autoResize:not(.is-fullscreen) .CustomVideoContainer {width: 960px;height: 540px;}}';
 		document.body.appendChild(customStyle);
 		CommentRenderer = document.getElementsByClassName('CommentRenderer')[0];
 		defaultCanvasElement = CommentRenderer.children[0];
