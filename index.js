@@ -4,7 +4,7 @@ let COMMENT = [];
 let CommentLimit = 40;
 
 async function LOADCOMMENT() {
-	let LoadedCommentCount = 0;
+	let LoadedCommentCount = 0,FailCount = 0;
 	const parser = new DOMParser();
 	const req = await fetch(location.href);
 	const apiData = JSON.parse(parser.parseFromString(await req.text(), "text/html").getElementById("js-initial-watch-data").getAttribute("data-api-data"));
@@ -40,12 +40,15 @@ async function LOADCOMMENT() {
 			method: 'GET',
 		});
 		const res = await req.text();
-		let GET_COMMENT_LIST = JSON.parse(res);
-		GET_COMMENT_LIST = GET_COMMENT_LIST.slice(2);
+		let GET_COMMENT_LIST;
 		try {
+			GET_COMMENT_LIST = JSON.parse(res);
+			GET_COMMENT_LIST = GET_COMMENT_LIST.slice(2);
 			TIME = GET_COMMENT_LIST[0].chat.date;
 		} catch (e) {
 			TIME -= 100;
+			FailCount ++;
+			if (FailCount > 10)throw new Error("fail to get comment");
 			logger(`[${LoadedCommentCount}/${CommentLimit}]: コメントの参照に失敗しました。お待ち下さい。`);
 			GET_COMMENT(TIME);
 			return;
@@ -55,12 +58,16 @@ async function LOADCOMMENT() {
 		LoadedCommentCount++;
 		COMMENT = COMMENT.concat(GET_COMMENT_LIST);
 		console.log(COMMENT);
+		FailCount = 0;
 		if (GET_COMMENT_LIST[0].chat.no < 5 || CommentLimit === LoadedCommentCount) {
 			console.log('完了');
 			CommentLoadingScreenWrapper.style.background = `#0ff`;
 			logger(`読み込みが終わりました。お待ち下さい。`);
 			PLAYCOMMENT();
 			return;
+		}
+		if (CommentLimit>30){
+			await sleep(1000);
 		}
 		GET_COMMENT(TIME);
 	}
@@ -109,6 +116,14 @@ const logger = (msg) => {
 	p.innerText = msg;
 	CommentLoadingScreen.appendChild(p);
 	CommentLoadingScreenWrapper.scrollBy(0, CommentLoadingScreen.clientHeight);
+}
+
+const sleep = (time) => {
+	return new Promise((resolve)=>{
+		setTimeout(()=>{
+			resolve();
+		},time);
+	})
 }
 
 window.onload = function () {
