@@ -22,7 +22,7 @@ async function LOADCOMMENT() {
 	logger(CommentLimit + '回読み込みます。');
 
 	async function GET_COMMENT(TIME) {
-		const threads = apiData.data.comment.threads;
+		const threads = apiData.comment.threads;
 
 		let params = {
 			'thread': threads[1]['id'],
