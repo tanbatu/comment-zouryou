@@ -2,11 +2,6 @@ let CommentRenderer, zouryouCanvasElement, defaultCanvasElement, videoElement, p
 let COMMENT = [];
 let CommentLimit = 40;
 
-function START_SCRIPT() {
-    LOADCOMMENT()
-}
-
-
 function LOADCOMMENT() {
     let url
     let LOADED_COMMENT_NUM = 0
@@ -162,20 +157,8 @@ window.onload = function () {
         PlayerContainer.appendChild(CommentLoadingScreenWrapper);
         CommentLoadingScreen = document.getElementById("CommentLoadingScreen");
         CustomVideoContainer.style.display="none";
-        zouryouCanvasElement.style.position="absolute";
-        zouryouCanvasElement.style.top="0";
-        zouryouCanvasElement.style.left="0";
-        zouryouCanvasElement.style.width="100%";
-        zouryouCanvasElement.style.height="100%";
-        zouryouCanvasElement.style.zIndex="0";
-        zouryouCanvasElement.style.display="none";
-        pipVideoElement.style.position="absolute";
-        pipVideoElement.style.top="0";
-        pipVideoElement.style.left="0";
-        pipVideoElement.style.width="100%";
-        pipVideoElement.style.height="100%";
-        pipVideoElement.style.zIndex="1";
-        pipVideoElement.style.pointerEvents="all";
+        zouryouCanvasElement.style = "position:absolute;top:0;left:0;width:100%;height:100%;z-index:0;display:none";
+        pipVideoElement.style = "position:absolute;top:0;left:0;width:100%;height:100%;z-index:1;pointer-events:all"
         pipVideoElement.onpause=()=>{
             pipVideoElement.play();
         }
@@ -195,7 +178,7 @@ window.onload = function () {
             CommentLimit = (num !== '') ? Number(num) : 20;
             CommentLoadingScreenWrapper.style = "width: 100%;position: absolute;height: 100%;background-color: #999;z-index: 6;opacity: 0.8;font-size:20px;color:black;overflow: scroll;top:0;left:0"
             document.getElementById('zenkomebutton').disabled = true;
-            setTimeout(START_SCRIPT, 2000)
+            setTimeout(LOADCOMMENT, 2000)
         }
     }, 1000)
 
