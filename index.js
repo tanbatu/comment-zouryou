@@ -99,6 +99,7 @@ function PLAYCOMMENT() {
             clearInterval(draw)
             CustomVideoContainer.style.display = "none";
             DefaultVideoContainer.style.display = "block";
+            CommentLoadingScreen.innerHTML="";
             document.getElementById('zenkomebutton').disabled = false;
             href = location.href;
             COMMENT = []
