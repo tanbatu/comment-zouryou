@@ -3,8 +3,11 @@ let CommentRenderer, zouryouCanvasElement, defaultCanvasElement, videoElement, p
 let COMMENT = [];
 let CommentLimit = 40;
 
-function LOADCOMMENT() {
+async function LOADCOMMENT() {
 	let LoadedCommentCount = 0;
+	const parser = new DOMParser();
+	const req = await fetch(location.href);
+	const apiData = JSON.parse(parser.parseFromString(await req.text(), "text/html").getElementById("js-initial-watch-data").getAttribute("data-api-data"));
 	const joinObj = function (obj, fDelimiter, sDelimiter) {
 		const tmpArr = [];
 		if (typeof obj === 'undefined') return '';
@@ -19,9 +22,6 @@ function LOADCOMMENT() {
 	logger(CommentLimit + '回読み込みます。');
 
 	async function GET_COMMENT(TIME) {
-		const smid = window.location.href.match(/https:\/\/www\.nicovideo\.jp\/watch\/([a-z]{2}?\d+)/);
-		const apiReq = await fetch(`https://www.nicovideo.jp/api/watch/v3/${smid[1]}?_frontendId=6&_frontendVersion=0&actionTrackId=a_0`);
-		const apiData = await apiReq.json();
 		const threads = apiData.data.comment.threads;
 
 		let params = {
