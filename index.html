@@ -1,9 +1,24 @@
-<div class="PlayerOptionMenuGroup">
-    <div class="PlayerOptionMenuGroup-groupName">全コメント</div>
-    <div class="PlayerOptionMenuItem CommentTransparencyPercentMenuItem">
-        <div class="PlayerOptionMenuItem-label">
-            <p class="PlayerOptionMenuItem-title">呼び出し回数(空で制限なし)</p>
-        </div>
-        <div class="PlayerOptionMenuItem-content"><input id="CommentCallNum" type="number"></div>
-    </div>
-</div>
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <style>
+        body {
+            width: 250px;
+            height: 100px;
+            background-color: rgb(31, 31, 31);
+            font-family: "Helvetica Neue", Helvetica;
+        }
+    </style>
+    <title>Document</title>
+</head>
+
+<body>
+    <p style="color:white;margin:0px">コメントを倍増</p>
+    <small style="font-size:10px;color:whitesmoke">最大15~20程度が推奨です.。それ以上呼び出すとPCがフリーズする可能性があります。</small>
+    <input id="load_num" style="width:100%" type="number" min="1" step="1" autocomplete="off" placeholder="2倍"></input>
+    <button id="zenkomebutton">読み込み開始！</button>
+</body>
+
+</html>
