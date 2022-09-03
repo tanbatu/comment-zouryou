@@ -1,6 +1,6 @@
 {
     "manifest_version": 3,
-    "name": "コメント増量(debug)",
+    "name": "コメント増量(β)",
     "description": "ニコニコ動画のコメントの表示量を増やす",
     "version": "0.1",
     "content_scripts": [{

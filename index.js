@@ -292,7 +292,7 @@ window.onload = function () {
         }
       },
       false
-    );
+    ); //
     document.getElementById("zenkomebutton").onclick = () => {
       let num = document.getElementById("load_num").value;
       setting.style.display = "none";
