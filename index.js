@@ -177,9 +177,16 @@ const sleep = (time) => {
 //NG機能(試験)
 
 let NG_LIST_COMMAND = ["device:3DS", "device:Switch"];
-let NG_LIST_COMMENT = ["加藤純一最強", "ティーダのチンポ"];
-
+let NG_LIST_COMMENT = [];
 const COMMENT_NG = () => {
+  let SETTING_NG_LIST_COMMENT = document
+    .getElementById("ng_list")
+    .getElementsByTagName("li");
+  for (let i = 0; i < SETTING_NG_LIST_COMMENT.length; i++) {
+    NG_LIST_COMMENT.push(SETTING_NG_LIST_COMMENT[i].textContent);
+  }
+  console.log(NG_LIST_COMMENT);
+  console.log(NG_LIST_COMMENT);
   console.log(COMMENT);
   return new Promise((resolve) => {
     COMMENT.forEach((COMMENT_, index) => {
@@ -205,39 +212,83 @@ const COMMENT_NG = () => {
 };
 
 window.onload = function () {
+  let index_html = chrome.runtime.getURL("files/index.html");
+  let image = chrome.runtime.getURL("lib/V4PN8Mx.png");
+  console.log(image);
+  console.log(index_html);
+  fetch(index_html)
+    .then((r) => r.text())
+    .then((html) => {
+      document
+        .getElementsByClassName("PlayerPanelContainer-tab")[0]
+        .insertAdjacentHTML("beforeend", html);
+    });
   setTimeout(function () {
-    document
-      .getElementsByClassName("VideoOverlayContainer")[0]
-      .insertAdjacentHTML(
-        "beforeend",
+    function ShowButton() {
+      document.getElementsByClassName("DropDownMenu")[0].insertAdjacentHTML(
+        "afterend",
         `
-        <div id='allcommentsetting' style='display: none;background-color:rgb(0,0,0,0.8);width:200px;height:200px;padding:2px;position:absolute;right:40px;bottom:0;'>
-            <p style='color:white;margin:0'>コメントを倍増</p>
-            <small style='font-size:10px;color:whitesmoke'>最大30程度が推奨です。それ以上呼び出すとPCがフリーズする可能性があります。</small>
-             <input id='load_num' type='number' min='1' step='1' autocomplete='off' placeholder='20'>
-             <div class="DateTimeInput">
-                <input id="zenkome-date" class="DateTimeInput-date" type="date" value="">
-                <input id="zenkome-time" class="DateTimeInput-time" type="time" value="">
-             </div>
-             <button id='zenkomebutton'>読み込み開始！</button>
-        </div>
+       <div class="ClickInterceptor LoginRequirer is-inline" style="padding-left:-4px">
+        <button data-title="コメントを倍増する" type="button" id="AllCommentViewButton" class="ActionButton ToggleShowOnlyMyCommentsButton">
+          <svg viewBox="2 2 20 19.99" xmlns="http://www.w3.org/2000/svg" xmlns:bx="https://boxy-svg.com">
+            <defs>
+              <style bx:fonts="Candal">@import url(https://fonts.googleapis.com/css2?family=Candal%3Aital%2Cwght%400%2C400&amp;display=swap);</style>
+            </defs>
+            <path d="M6.8 18H3.6c-.9 0-1.6-.7-1.6-1.6V3.6C2 2.7 2.7 2 3.6 2h16.8c.9 0 1.6.7 1.6 1.6v12.8c0 .9-.7 1.6-1.6 1.6h-7.9l-4.2 3.8a1 1 0 01-1 .1.8.8 0 01-.5-.7V18z"/>
+            <text style="fill: rgb(255, 255, 255); font-family: Candal; font-size: 16px; text-transform: capitalize; white-space: pre;" transform="matrix(0.555965, 0, 0, 0.638972, 1.691508, 2.727544)" x="4.192" y="16.413">ALL</text>
+          </svg>
+        </button>
+       </div>
         `
       );
-    (
-      document.getElementsByClassName("PlayerRepeatOnButton")[0] ||
-      document.getElementsByClassName("PlayerRepeatOffButton")[0]
-    ).insertAdjacentHTML(
-      "beforebegin",
-      `
-        <button data-title='全コメ表示' type='button' class='ActionButton ControllerButton' id='AllCommentViewButton' style='margin: 0 -4px;'>
-            <div class='ControllerButton-inner' style='transform: scale(100%,87%);'>
-                <svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 20' width='48px' height='48px'>
-                    <text font-weight='bold' transform='matrix(0.588408 0 0 1 0.588408 0)' stroke='null' xml:space='preserve' text-anchor='start' font-family='Signika' font-size='24' stroke-width='0' id='svg_4' y='19.76873' x='-0'>ALL</text>
-                </svg>
-            </div>
-        </button>
-        `
-    );
+      document.getElementById("AllCommentViewButton").addEventListener(
+        "click",
+        () => {
+          if (setting.style.display === "none") {
+            setting.style.display = "block";
+          } else {
+            setting.style.display = "none";
+          }
+        },
+        false
+      );
+      document.getElementsByClassName("CloseButton")[0].addEventListener(
+        "click",
+        () => {
+          if (setting.style.display === "none") {
+            setting.style.display = "block";
+          } else {
+            setting.style.display = "none";
+          }
+        },
+        false
+      );
+    }
+    ShowButton();
+    document
+      .getElementsByClassName("PlayerPanelContainer-tabItem")[0]
+      .addEventListener(
+        "click",
+        () => {
+          if (document.getElementById("AllCommentViewButton") == null) {
+            setTimeout(() => {
+              ShowButton();
+            }, 100);
+          }
+          document.getElementById("AllCommentViewButton").addEventListener(
+            "click",
+            () => {
+              if (setting.style.display === "none") {
+                setting.style.display = "block";
+              } else {
+                setting.style.display = "none";
+              }
+            },
+            false
+          );
+        },
+        false
+      ); //
 
     let customStyle = document.createElement("style");
     customStyle.innerHTML =
@@ -282,21 +333,11 @@ window.onload = function () {
       .replaceAll("/", "-");
     OLD_DATE.max = new Date().getFullYear() + "-12-31";
     console.log(OLD_DATE);
-    document.getElementById("AllCommentViewButton").addEventListener(
-      "click",
-      () => {
-        if (setting.style.display === "none") {
-          setting.style.display = "block";
-        } else {
-          setting.style.display = "none";
-        }
-      },
-      false
-    ); //
+
     document.getElementById("zenkomebutton").onclick = () => {
       let num = document.getElementById("load_num").value;
       setting.style.display = "none";
-      CommentLimit = num !== "" ? Number(num) : 20;
+      CommentLimit = num !== "" ? Number(num) : 5;
       CommentLoadingScreenWrapper.style =
         "width: 100%;position: absolute;height: 100%;background-color: #999;z-index: 6;opacity: 0.8;font-size:20px;color:black;overflow: scroll;top:0;left:0";
       document.getElementById("zenkomebutton").disabled = true;
