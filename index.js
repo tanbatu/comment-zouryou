@@ -66,7 +66,7 @@ async function LOADCOMMENT() {
     try {
       GET_COMMENT_LIST = JSON.parse(res);
       GET_COMMENT_LIST = GET_COMMENT_LIST.slice(2);
-
+      console.log(GET_COMMENT_LIST);
       TIME = GET_COMMENT_LIST[0].chat.date;
     } catch (e) {
       TIME -= 100;
@@ -110,12 +110,10 @@ async function LOADCOMMENT() {
     }
     GET_COMMENT(TIME);
   }
-
-  if (OLD_DATE == "") {
+  if (OLD_DATE.value == "") {
     GET_COMMENT(new Date().getTime() / 1000);
   } else {
     let LOAD_DATE = OLD_DATE.value + " " + OLD_TIME.value;
-
     GET_COMMENT(new Date(LOAD_DATE).getTime() / 1000);
     console.log(LOAD_DATE);
   }
@@ -176,17 +174,23 @@ const sleep = (time) => {
 
 //NG機能(試験)
 
-let NG_LIST_COMMAND = ["device:3DS", "device:Switch"];
+let NG_LIST_COMMAND = [];
 let NG_LIST_COMMENT = [];
 const COMMENT_NG = () => {
   let SETTING_NG_LIST_COMMENT = document
     .getElementById("ng_list")
     .getElementsByTagName("li");
+  let SETTING_NG_LIST_COMMAND = document
+    .getElementById("ng_command")
+    .getElementsByTagName("li");
   for (let i = 0; i < SETTING_NG_LIST_COMMENT.length; i++) {
     NG_LIST_COMMENT.push(SETTING_NG_LIST_COMMENT[i].textContent);
   }
+  for (let i = 0; i < SETTING_NG_LIST_COMMAND.length; i++) {
+    NG_LIST_COMMAND.push(SETTING_NG_LIST_COMMAND[i].textContent);
+  }
   console.log(NG_LIST_COMMENT);
-  console.log(NG_LIST_COMMENT);
+  console.log(NG_LIST_COMMAND);
   console.log(COMMENT);
   return new Promise((resolve) => {
     COMMENT.forEach((COMMENT_, index) => {
