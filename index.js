@@ -36,12 +36,22 @@ async function LOADCOMMENT() {
   };
   //コメント取得
   logger(CommentLimit + "回読み込みます。");
+  const threads = apiData.comment.threads;
+  let channel_URL =
+    "https://flapi.nicovideo.jp/api/getthreadkey?thread=" + threads[2]["id"];
+
+  let channel_params = "";
+  await fetch(channel_URL)
+    .then((response) => response.text())
+    .then((data) => {
+      console.log(data);
+      channel_params = "&" + data;
+      console.log(channel_params);
+    });
 
   async function GET_COMMENT(TIME) {
-    const threads = apiData.comment.threads;
-
     let params = {
-      thread: threads[1]["id"],
+      thread: threads[2]["id"],
       version: "20090904",
       scores: "1",
       nicoru: "3",
@@ -54,7 +64,8 @@ async function LOADCOMMENT() {
       params,
       "=",
       "&"
-    )}`;
+    )}${channel_params}`;
+    console.log(url);
     logger(
       `[${LoadedCommentCount}/${CommentLimit}]: ${url}を読み込んでいます...`
     );
@@ -120,19 +131,23 @@ async function LOADCOMMENT() {
 }
 
 function PLAYCOMMENT() {
-  let niconiComments, draw;
-
+  let draw;
   async function setup() {
     CustomVideoContainer.style.display = "block";
     DefaultVideoContainer.style.display = "none";
+    let niconiComments;
+    console.log(COMMENT);
     niconiComments = new NiconiComments(zouryouCanvasElement, COMMENT, {
       video: videoElement,
+      size: document.getElementById("checkbox1").checked,
       enableLegacyPiP: true,
       useLegacy: true,
     });
+    console.log(niconiComments.enableLegacyPiP);
     draw = setInterval(
       () =>
         niconiComments.drawCanvas(Math.floor(videoElement.currentTime * 100)),
+
       10
     );
     pipVideoElement.srcObject = zouryouCanvasElement.captureStream(60);
@@ -144,6 +159,7 @@ function PLAYCOMMENT() {
   let href = location.href;
   let observer = new MutationObserver(function () {
     if (href !== location.href) {
+      console.log("observe");
       clearInterval(draw);
       CustomVideoContainer.style.display = "none";
       DefaultVideoContainer.style.display = "block";
@@ -151,10 +167,12 @@ function PLAYCOMMENT() {
       document.getElementById("zenkomebutton").disabled = false;
       href = location.href;
       COMMENT = [];
+
+      PREPARE();
     }
   });
   observer.observe(document, { childList: true, subtree: true });
-  setTimeout(setup, 100);
+  setTimeout(setup, 1000);
 }
 
 const logger = (msg) => {
@@ -177,25 +195,12 @@ const sleep = (time) => {
 let NG_LIST_COMMAND = [];
 let NG_LIST_COMMENT = [];
 const COMMENT_NG = () => {
-  let SETTING_NG_LIST_COMMENT = document
-    .getElementById("ng_list")
-    .getElementsByTagName("li");
-  let SETTING_NG_LIST_COMMAND = document
-    .getElementById("ng_command")
-    .getElementsByTagName("li");
-  for (let i = 0; i < SETTING_NG_LIST_COMMENT.length; i++) {
-    NG_LIST_COMMENT.push(SETTING_NG_LIST_COMMENT[i].textContent);
-  }
-  for (let i = 0; i < SETTING_NG_LIST_COMMAND.length; i++) {
-    NG_LIST_COMMAND.push(SETTING_NG_LIST_COMMAND[i].textContent);
-  }
-  console.log(NG_LIST_COMMENT);
   console.log(NG_LIST_COMMAND);
+
   console.log(COMMENT);
   return new Promise((resolve) => {
     COMMENT.forEach((COMMENT_, index) => {
       if (COMMENT_.chat.mail == undefined) {
-        console.log(index);
         COMMENT_.chat.mail = "";
       }
     });
@@ -215,7 +220,7 @@ const COMMENT_NG = () => {
   });
 };
 
-window.onload = function () {
+window.onload = function PREPARE() {
   let index_html = chrome.runtime.getURL("files/index.html");
   let image = chrome.runtime.getURL("lib/V4PN8Mx.png");
   console.log(image);
@@ -229,9 +234,11 @@ window.onload = function () {
     });
   setTimeout(function () {
     function ShowButton() {
-      document.getElementsByClassName("DropDownMenu")[0].insertAdjacentHTML(
-        "afterend",
-        `
+      let DropDownMenu = document.getElementsByClassName("DropDownMenu")[0];
+      if (DropDownMenu != undefined) {
+        document.getElementsByClassName("DropDownMenu")[0].insertAdjacentHTML(
+          "afterend",
+          `
        <div class="ClickInterceptor LoginRequirer is-inline" style="padding-left:-4px">
         <button data-title="コメントを倍増する" type="button" id="AllCommentViewButton" class="ActionButton ToggleShowOnlyMyCommentsButton">
           <svg viewBox="2 2 20 19.99" xmlns="http://www.w3.org/2000/svg" xmlns:bx="https://boxy-svg.com">
@@ -244,31 +251,18 @@ window.onload = function () {
         </button>
        </div>
         `
-      );
-      document.getElementById("AllCommentViewButton").addEventListener(
-        "click",
-        () => {
-          if (setting.style.display === "none") {
-            setting.style.display = "block";
-          } else {
-            setting.style.display = "none";
-          }
-        },
-        false
-      );
-      document.getElementsByClassName("CloseButton")[0].addEventListener(
-        "click",
-        () => {
-          if (setting.style.display === "none") {
-            setting.style.display = "block";
-          } else {
-            setting.style.display = "none";
-          }
-        },
-        false
-      );
+        );
+        document.getElementById("AllCommentViewButton").addEventListener(
+          "click",
+          () => {
+            setting.style.visibility = "visible";
+          },
+          false
+        );
+      }
     }
     ShowButton();
+
     document
       .getElementsByClassName("PlayerPanelContainer-tabItem")[0]
       .addEventListener(
@@ -279,17 +273,6 @@ window.onload = function () {
               ShowButton();
             }, 100);
           }
-          document.getElementById("AllCommentViewButton").addEventListener(
-            "click",
-            () => {
-              if (setting.style.display === "none") {
-                setting.style.display = "block";
-              } else {
-                setting.style.display = "none";
-              }
-            },
-            false
-          );
         },
         false
       ); //
@@ -331,16 +314,106 @@ window.onload = function () {
     OLD_DATE = document.getElementById("zenkome-date");
     OLD_TIME = document.getElementById("zenkome-time");
     const setting = document.getElementById("allcommentsetting");
-    OLD_DATE.min = document
-      .getElementsByClassName("VideoUploadDateMeta-dateTimeLabel")[0]
-      .textContent.split(" ")[0]
-      .replaceAll("/", "-");
+    document.getElementsByClassName("CloseButton")[0].addEventListener(
+      "click",
+      () => {
+        setting.style.visibility = "hidden";
+      },
+      false
+    );
+    OLD_DATE.min = "2007-03-03";
     OLD_DATE.max = new Date().getFullYear() + "-12-31";
     console.log(OLD_DATE);
 
+    //NG取得とか
+    let ng_storage = localStorage.getItem("ng_storage");
+    let ngarray, SETTING_NG_LIST_COMMENT, SETTING_NG_LIST_COMMAND;
+
+    function NG_DELETE(type, i) {
+      ngarray[type].splice(i, 1);
+      console.log(ngarray[type]);
+      localStorage.setItem("ng_storage", JSON.stringify(ngarray));
+      document.getElementById("ng_comment").innerHTML = "";
+      document.getElementById("ng_command").innerHTML = "";
+
+      setTimeout(() => {
+        ng_element();
+      }, 100);
+    }
+
+    function ng_element() {
+      ng_storage = localStorage.getItem("ng_storage");
+      NG_LIST_COMMAND = [];
+      NG_LIST_COMMENT = [];
+      SETTING_NG_LIST_COMMENT = document.getElementById("ng_comment");
+      SETTING_NG_LIST_COMMAND = document.getElementById("ng_command");
+      if (ng_storage == null || ng_storage == "[null]") {
+        localStorage.setItem(
+          "ng_storage",
+          JSON.stringify({ command: [], comment: [] })
+        );
+      } else {
+        ngarray = JSON.parse(ng_storage);
+        ngarray.command.forEach((command) => NG_LIST_COMMAND.push(command));
+        ngarray.comment.forEach((comment) => NG_LIST_COMMENT.push(comment));
+        console.log(NG_LIST_COMMENT);
+        for (let i = 0; i < NG_LIST_COMMENT.length; i++) {
+          SETTING_NG_LIST_COMMENT.innerHTML += `<li>${NG_LIST_COMMENT[i]}
+          <button id="del_e${i}" class="deletebutton" ></button></li>`;
+        }
+        for (let i = 0; i < NG_LIST_COMMENT.length; i++) {
+          document.getElementById(`del_e${i}`).onclick = function (e) {
+            NG_DELETE("comment", i);
+          };
+        }
+        for (let i = 0; i < NG_LIST_COMMAND.length; i++) {
+          SETTING_NG_LIST_COMMAND.innerHTML += `<li>${NG_LIST_COMMAND[i]}
+          <button id="del_a${i}"  class="deletebutton" ></button></li>`;
+        }
+        for (let i = 0; i < NG_LIST_COMMAND.length; i++) {
+          document.getElementById(`del_a${i}`).onclick = function (e) {
+            NG_DELETE("command", i);
+          };
+        }
+      }
+    }
+    ng_element();
+
+    document.getElementById("form_command").onclick = () => {
+      ng_storage = localStorage.getItem("ng_storage");
+      ngarray = JSON.parse(ng_storage);
+      let ng_add = window.prompt(
+        "新たに追加するNGコマンドを入力してください。"
+      );
+      ngarray.command.push(ng_add);
+      localStorage.setItem("ng_storage", JSON.stringify(ngarray));
+      document.getElementById("ng_comment").innerHTML = "";
+      document.getElementById("ng_command").innerHTML = "";
+      setTimeout(() => {
+        ng_element();
+      }, 100);
+    };
+
+    document.getElementById("form_comment").onclick = () => {
+      ng_storage = localStorage.getItem("ng_storage");
+      ngarray = JSON.parse(ng_storage);
+      let ng_add = window.prompt(
+        "新たに追加するNGコメントを入力してください。"
+      );
+      ngarray.comment.push(ng_add);
+      localStorage.setItem("ng_storage", JSON.stringify(ngarray));
+      document.getElementById("ng_comment").innerHTML = "";
+      document.getElementById("ng_command").innerHTML = "";
+      setTimeout(() => {
+        ng_element();
+      }, 100);
+    };
+
+    let ng_command = document.getElementById("ng_command");
+    let ng_comment = document.getElementById("ng_comment");
+
     document.getElementById("zenkomebutton").onclick = () => {
       let num = document.getElementById("load_num").value;
-      setting.style.display = "none";
       CommentLimit = num !== "" ? Number(num) : 5;
       CommentLoadingScreenWrapper.style =
         "width: 100%;position: absolute;height: 100%;background-color: #999;z-index: 6;opacity: 0.8;font-size:20px;color:black;overflow: scroll;top:0;left:0";

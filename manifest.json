@@ -5,7 +5,7 @@
     "version": "0.1",
     "content_scripts": [{
         "matches": ["https://www.nicovideo.jp/watch/*", "https://nicovideo.jp/watch/*"],
-        "js": ["lib/niconicomments.js", "index.js"],
+        "js": ["lib/niconicomments_v0.2.24.js", "index.js"],
 
         "run_at": "document_end"
     }],
