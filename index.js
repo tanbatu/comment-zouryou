@@ -14,6 +14,9 @@ let COMMENT = [];
 let CommentLimit = 40;
 
 async function LOADCOMMENT() {
+  document.getElementById("loaded").style.visibility = "visible";
+  document.getElementsByClassName("fa fa-wheelchair-alt")[0].innerText =
+    "読み込みました";
   let LoadedCommentCount = 0,
     FailCount = 0;
   const parser = new DOMParser();
@@ -109,9 +112,12 @@ async function LOADCOMMENT() {
     ) {
       console.log("完了");
       CommentLoadingScreenWrapper.style.background = `#0ff`;
-      logger(`読み込みが終わりました。お待ち下さい。`);
+      logger(COMMENT.length + "件のコメントを読み込みました");
+      logger(`NG設定を適用しています...`);
 
       COMMENT = await COMMENT_NG();
+      logger(COMMENT.length + "件に減りました");
+      logger(`読み込み中...`);
       console.log(COMMENT);
       PLAYCOMMENT();
       return;
@@ -178,6 +184,7 @@ function PLAYCOMMENT() {
       CustomVideoContainer.style.display = "none";
       DefaultVideoContainer.style.display = "block";
       CommentLoadingScreen.innerHTML = "";
+      document.getElementById("loaded").style.visibility = "hidden";
       document.getElementById("zenkomebutton").disabled = false;
       href = location.href;
       COMMENT = [];
@@ -218,12 +225,18 @@ const COMMENT_NG = () => {
         COMMENT_.chat.mail = "";
       }
     });
-    NG_LIST_COMMAND.forEach(
-      (NG) =>
-        (COMMENT = COMMENT.filter(
-          (COMMENT) => COMMENT.chat.mail.includes(NG) == false
-        ))
-    );
+    NG_LIST_COMMAND.forEach((NG) => {
+      let COMMAND = NG.toLowerCase().split(" ");
+      COMMENT = COMMENT.filter(function (COMMENT) {
+        let ng_point = COMMAND.length;
+        COMMAND.forEach((COMMAND) => {
+          if (COMMENT.chat.mail.toLowerCase().includes(COMMAND)) {
+            ng_point -= 1;
+          }
+        });
+        return ng_point > 0;
+      });
+    });
     NG_LIST_COMMENT.forEach(
       (NG) =>
         (COMMENT = COMMENT.filter(
@@ -235,19 +248,28 @@ const COMMENT_NG = () => {
 };
 
 function PREPARE(observe) {
-  let index_html = chrome.runtime.getURL("files/index.html");
-  let image = chrome.runtime.getURL("lib/V4PN8Mx.png");
-  console.log(image);
-  console.log(index_html);
-  fetch(index_html)
-    .then((r) => r.text())
-    .then((html) => {
-      document
-        .getElementsByClassName("PlayerPanelContainer-tab")[0]
-        .insertAdjacentHTML("beforeend", html);
-    });
+  if (document.getElementById("allcommentsetting") == undefined) {
+    let index_html = chrome.runtime.getURL("files/index.html");
+    let image = chrome.runtime.getURL("lib/V4PN8Mx.png");
+    console.log(image);
+    console.log(index_html);
+    fetch(index_html)
+      .then((r) => r.text())
+      .then((html) => {
+        document
+          .getElementsByClassName("PlayerPanelContainer-tab")[0]
+          .insertAdjacentHTML("beforeend", html);
+      });
+    setTimeout(() => {
+      ng_element();
+    }, 100);
+  }
+
+  document.getElementsByClassName("fa fa-wheelchair-alt")[0].innerText =
+    "読み込み開始！";
   setTimeout(function () {
     function ShowButton() {
+      if (document.getElementById("AllCommentViewButton") != undefined) return;
       let DropDownMenu = document.getElementsByClassName("DropDownMenu")[0];
       if (DropDownMenu != undefined) {
         document.getElementsByClassName("DropDownMenu")[0].insertAdjacentHTML(
@@ -269,15 +291,14 @@ function PREPARE(observe) {
         document.getElementById("AllCommentViewButton").addEventListener(
           "click",
           () => {
-            setting.style.visibility = "visible";
+            console.log(2);
+            setting.style.display = "block";
           },
           false
         );
       }
     }
-    if (!observe) {
-      ShowButton();
-    }
+    ShowButton();
 
     document
       .getElementsByClassName("PlayerPanelContainer-tabItem")[0]
@@ -333,7 +354,7 @@ function PREPARE(observe) {
     document.getElementsByClassName("CloseButton")[0].addEventListener(
       "click",
       () => {
-        setting.style.visibility = "hidden";
+        setting.style.display = "none";
       },
       false
     );
@@ -351,10 +372,6 @@ function PREPARE(observe) {
       localStorage.setItem("ng_storage", JSON.stringify(ngarray));
       document.getElementById("ng_comment").innerHTML = "";
       document.getElementById("ng_command").innerHTML = "";
-
-      setTimeout(() => {
-        ng_element();
-      }, 100);
     }
 
     function ng_element() {
@@ -444,12 +461,17 @@ function PREPARE(observe) {
       let num = document.getElementById("load_num").value;
       CommentLimit = num !== "" ? Number(num) : 5;
       CommentLoadingScreenWrapper.style =
-        "width: 100%;position: absolute;height: 100%;background-color: #999;z-index: 6;opacity: 0.8;font-size:20px;color:black;overflow: scroll;top:0;left:0";
+        "width: 100%;position: absolute;height: 100%;background-color: #999;z-index: 6;opacity: 0.8;font-size:20px;color:black;overflow: auto;top:0;left:0";
       document.getElementById("zenkomebutton").disabled = true;
-      setTimeout(LOADCOMMENT, 2000);
+
+      LOADCOMMENT();
     };
   }, 1000);
 }
-window.onload = function () {
-  PREPARE();
-};
+
+const start = setInterval(() => {
+  if (document.getElementsByClassName("DropDownMenu")[0] != undefined) {
+    PREPARE(false);
+    clearInterval(start);
+  }
+}, 50);
