@@ -129,33 +129,47 @@ async function LOADCOMMENT() {
     console.log(LOAD_DATE);
   }
 }
-
+let niconiComments;
 function PLAYCOMMENT() {
   let draw;
   async function setup() {
-    CustomVideoContainer.style.display = "block";
-    DefaultVideoContainer.style.display = "none";
-    let niconiComments;
+    DefaultVideoContainer.style.display = "block";
+
+    CustomVideoContainer.style = "z-index:1;position:absolute;display:block;";
+
     console.log(COMMENT);
     niconiComments = new NiconiComments(zouryouCanvasElement, COMMENT, {
       video: videoElement,
-      size: document.getElementById("checkbox1").checked,
+      size: document.getElementById("bar_textsize").value,
       enableLegacyPiP: true,
-      useLegacy: true,
+      stroke: document.getElementById("bar_stroke").value,
+      showFPS: false,
+      alpha: document.getElementById("bar_alpha").value * 0.01,
+      useLegacy: document.getElementById("checkbox3").checked == false,
     });
     console.log(niconiComments.enableLegacyPiP);
-    draw = setInterval(
-      () =>
-        niconiComments.drawCanvas(Math.floor(videoElement.currentTime * 100)),
-
-      10
+    draw = setInterval(() =>
+      niconiComments.drawCanvas(Math.floor(videoElement.currentTime * 100))
     );
+
     pipVideoElement.srcObject = zouryouCanvasElement.captureStream(60);
     pipVideoElement.muted = true;
     pipVideoElement.play();
     CommentLoadingScreenWrapper.style.display = "none";
   }
-
+  document
+    .getElementsByClassName(
+      "ActionButton ControllerButton CommentOnOffButton"
+    )[0]
+    .addEventListener("click", function () {
+      CustomVideoContainer.style.zIndex =
+        document.getElementsByClassName(
+          "ActionButton ControllerButton CommentOnOffButton"
+        )[0].children[0].children[0].className.baseVal ==
+        "CommentOnOffButton-iconShow"
+          ? 1
+          : 0;
+    });
   let href = location.href;
   let observer = new MutationObserver(function () {
     if (href !== location.href) {
@@ -168,7 +182,7 @@ function PLAYCOMMENT() {
       href = location.href;
       COMMENT = [];
 
-      PREPARE();
+      PREPARE(true);
     }
   });
   observer.observe(document, { childList: true, subtree: true });
@@ -220,7 +234,7 @@ const COMMENT_NG = () => {
   });
 };
 
-window.onload = function PREPARE() {
+function PREPARE(observe) {
   let index_html = chrome.runtime.getURL("files/index.html");
   let image = chrome.runtime.getURL("lib/V4PN8Mx.png");
   console.log(image);
@@ -261,7 +275,9 @@ window.onload = function PREPARE() {
         );
       }
     }
-    ShowButton();
+    if (!observe) {
+      ShowButton();
+    }
 
     document
       .getElementsByClassName("PlayerPanelContainer-tabItem")[0]
@@ -409,8 +425,20 @@ window.onload = function PREPARE() {
       }, 100);
     };
 
-    let ng_command = document.getElementById("ng_command");
-    let ng_comment = document.getElementById("ng_comment");
+    const val_stroke = document.getElementsByClassName("range_val");
+    const bar_stroke = document.getElementsByClassName("range_bar");
+    for (let i = 0; i < val_stroke.length; i++) {
+      bar_stroke[i].addEventListener(
+        "input",
+        function (e) {
+          val_stroke[i].innerText = e.target.value;
+          if (this.id == "bar_alpha") {
+            niconiComments.alpha = e.target.value;
+          }
+        },
+        false
+      );
+    }
 
     document.getElementById("zenkomebutton").onclick = () => {
       let num = document.getElementById("load_num").value;
@@ -421,4 +449,7 @@ window.onload = function PREPARE() {
       setTimeout(LOADCOMMENT, 2000);
     };
   }, 1000);
+}
+window.onload = function () {
+  PREPARE();
 };
