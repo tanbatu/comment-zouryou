@@ -131,6 +131,7 @@ async function LOADCOMMENT() {
 let niconiComments;
 function PLAYCOMMENT() {
   let draw;
+
   async function setup() {
     DefaultVideoContainer.style.display = "block";
 
@@ -139,12 +140,20 @@ function PLAYCOMMENT() {
     niconiComments = new NiconiComments(zouryouCanvasElement, COMMENT, {
       //video: videoElement,
       // enableLegacyPiP: true,
-      size: document.getElementById("bar_textsize").value,
-      stroke: document.getElementById("bar_stroke").value,
+      scale: document.getElementById("bar_textsize").value * 0.01,
+      keepCA: true,
+
+      config: (Config = {
+        contextStrokeOpacity: Number(
+          document.getElementById("bar_stroke").value
+        ),
+
+        contextLineWidth: 8,
+      }),
+
       showFPS: false,
       useLegacy: document.getElementById("checkbox3").checked == false,
     });
-
     draw = setInterval(() =>
       niconiComments.drawCanvas(Math.floor(videoElement.currentTime * 100))
     );
@@ -384,6 +393,7 @@ function PREPARE(observe) {
       "input",
       function (e) {
         val_stroke[i].innerText = e.target.value;
+
         if (this.id == "bar_alpha") {
           pipVideoElement.style.opacity = e.target.value * 0.01;
         }
