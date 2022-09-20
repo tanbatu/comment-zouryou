@@ -16,7 +16,7 @@ let CommentLimit = 40;
 async function LOADCOMMENT() {
   document.getElementById("loaded").style.visibility = "visible";
   document.getElementsByClassName("loadbutton_text")[0].innerText =
-    "読み込みました";
+    "読み込み中";
   let LoadedCommentCount = 0,
     FailCount = 0;
   const parser = new DOMParser();
@@ -131,12 +131,20 @@ async function LOADCOMMENT() {
 let niconiComments;
 function PLAYCOMMENT() {
   let draw;
-
+  const apiData = JSON.parse(
+    document
+      .getElementById("js-initial-watch-data")
+      .getAttribute("data-api-data")
+  );
   async function setup() {
     DefaultVideoContainer.style.display = "block";
-
+    document.getElementsByClassName("loadbutton_text")[0].innerText =
+      "JSONをダウンロード";
     CustomVideoContainer.style = "z-index:1;position:absolute;display:block;";
-
+    const blob = new Blob([JSON.stringify(COMMENT)], { type: "text/plain" });
+    let link = document.getElementById("loaded");
+    link.href = URL.createObjectURL(blob); // URLを作成
+    link.download = apiData.video.id + ".json"; // ファイル名
     niconiComments = new NiconiComments(zouryouCanvasElement, COMMENT, {
       //video: videoElement,
       // enableLegacyPiP: true,
