@@ -8,12 +8,15 @@ let CommentRenderer,
   DefaultVideoContainer,
   PlayerContainer,
   CommentLoadingScreenWrapper,
+  loading,
+  loading_text,
   OLD_DATE,
   OLD_TIME;
 let COMMENT = [];
 let CommentLimit = 40;
 
 async function LOADCOMMENT() {
+  loading.style.display = "block";
   document.getElementById("loaded").style.visibility = "visible";
   document.getElementsByClassName("loadbutton_text")[0].innerText =
     "読み込み中";
@@ -68,8 +71,10 @@ async function LOADCOMMENT() {
       "&"
     )}${channel_params}`;
     logger(
-      `[${LoadedCommentCount}/${CommentLimit}]: ${url}を読み込んでいます...`
+      `[${LoadedCommentCount}/${CommentLimit}]: ${url}を読み込んでいます...`,
+      false
     );
+
     const req = await fetch(url, {
       method: "GET",
     });
@@ -92,11 +97,13 @@ async function LOADCOMMENT() {
       GET_COMMENT(TIME);
       return;
     }
-    /*CommentLoadingScreenWrapper.style.background = `linear-gradient(90deg,rgb(0, 145, 255,0.9) 0%,#0ff ${
+    document.getElementById(
+      "progress_bar"
+    ).style.background = `linear-gradient(90deg,rgb(0, 145, 255,0.9) 0%,#0ff ${
       (LoadedCommentCount / CommentLimit) * 100
     }%,rgba(0, 0, 0, .9) ${
       (LoadedCommentCount / CommentLimit) * 100
-    }%,rgba(0, 0, 0, .9) 100%)`;*/
+    }%,rgba(0, 0, 0, .9) 100%)`;
     logger(
       `[${LoadedCommentCount}/${CommentLimit}]: コメ番${GET_COMMENT_LIST[0].chat.no}まで読み込みました`
     );
@@ -111,11 +118,14 @@ async function LOADCOMMENT() {
     ) {
       CommentLoadingScreenWrapper.style.background = `rgba(0, 0, 0, .9)`;
       logger(COMMENT.length + "件のコメントを読み込みました");
-      logger(`NG設定を適用しています...`);
+      logger(`NG設定を適用しています`);
 
       COMMENT = await COMMENT_NG();
       logger(COMMENT.length + "件に減りました");
-      logger(`読み込み中...`);
+      logger(`描画準備中`);
+      document.getElementById(
+        "progress_bar"
+      ).style.background = `linear-gradient(90deg,rgb(0, 145, 255,0.9) 0%,#0ff 100%`;
       PLAYCOMMENT();
       return;
     }
@@ -134,6 +144,7 @@ async function LOADCOMMENT() {
 let niconiComments;
 function PLAYCOMMENT() {
   let draw;
+
   console.log(COMMENT);
   const apiData = JSON.parse(
     document
@@ -150,8 +161,8 @@ function PLAYCOMMENT() {
     link.href = URL.createObjectURL(blob); // URLを作成
     link.download = apiData.video.id + ".json"; // ファイル名
     niconiComments = new NiconiComments(zouryouCanvasElement, COMMENT, {
-      //video: videoElement,
-      // enableLegacyPiP: true,
+      video: document.getElementById("iscanvas").checked ? videoElement : null,
+      enableLegacyPiP: true,
       scale: document.getElementById("bar_textsize").value * 0.01,
       keepCA: document.getElementById("checkbox4").checked,
 
@@ -166,6 +177,7 @@ function PLAYCOMMENT() {
       showFPS: false,
       useLegacy: document.getElementById("checkbox3").checked == false,
     });
+    loading.style.display = "none";
     draw = setInterval(() =>
       niconiComments.drawCanvas(Math.floor(videoElement.currentTime * 100))
     );
@@ -210,9 +222,13 @@ function PLAYCOMMENT() {
   setTimeout(setup, 1000);
 }
 
-const logger = (msg) => {
+const logger = (msg, load) => {
   const p = document.createElement("p");
   p.innerText = msg;
+  if (load != false) {
+    loading_text.innerText = msg;
+  }
+
   console.log(msg);
   CommentLoadingScreen.appendChild(p);
   CommentLoadingScreenWrapper.scrollBy(0, CommentLoadingScreen.clientHeight);
@@ -287,6 +303,7 @@ function PREPARE(observe) {
       background-size: 1000px 50px;`;
   }
   document.getElementById("logo").src = logo_image;
+  document.getElementById("loading_image").src = load_image;
   PlayerContainer.children[0].after(CustomVideoContainer);
   zouryouCanvasElement = document.getElementById("zouryouCanvasElement");
   pipVideoElement = document.getElementById("pipVideoElement");
@@ -340,7 +357,8 @@ function PREPARE(observe) {
     NG_LIST_COMMENT = [];
     SETTING_NG_LIST_COMMENT = document.getElementById("ng_comment");
     SETTING_NG_LIST_COMMAND = document.getElementById("ng_command");
-
+    loading_text = document.getElementById("loading_text");
+    loading = document.getElementById("loading");
     SETTING_NG_LIST_COMMAND.innerHTML = "";
     SETTING_NG_LIST_COMMENT.innerHTML = "";
 
@@ -421,6 +439,9 @@ function PREPARE(observe) {
     console.log(this.checked);
     CommentLoadingScreenWrapper.style.display = this.checked ? "block" : "none";
   });
+  document.getElementById("iscanvas").addEventListener("change", function () {
+    niconiComments.video = this.checked ? videoElement : null;
+  });
 
   document.getElementById("zenkomebutton").onclick = () => {
     let num = document.getElementById("load_num").value;
@@ -481,6 +502,7 @@ function PREPARE(observe) {
 let index_html = chrome.runtime.getURL("files/index.html");
 let wave_image = chrome.runtime.getURL("lib/wave.png");
 let logo_image = chrome.runtime.getURL("lib/logo2.png");
+let load_image = chrome.runtime.getURL("lib/load.svg");
 let setting_html;
 fetch(index_html)
   .then((r) => r.text())
