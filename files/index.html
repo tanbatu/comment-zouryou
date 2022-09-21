@@ -4,7 +4,7 @@
 <head>
     <meta charset="UTF-8" />
     <link rel="stylesheet" href="style.css">
-
+    <script src="https://kit.fontawesome.com/8c1c217dfa.js" crossorigin="anonymous"></script>
     <title>Document</title>
 </head>
 
@@ -309,6 +309,29 @@
                 background-position-x: 1000px;
             }
         }
+
+        #CommentLoadingScreenWrapper {
+            position: absolute;
+            height: calc(100% - 32px);
+            background: rgba(0, 0, 0, .9);
+            z-index: 6;
+            font-size: 20px;
+            color: black;
+            width: calc(100% - 64px);
+            top: 50%;
+            left: 50%;
+            padding: 16px 24px;
+            overflow: auto;
+            transform: translate(-50%, -50%);
+
+        }
+
+        #CommentLoadingScreen {
+            color: white;
+            line-height: 1.2;
+            font-family: Courier New, Consolas, monospace;
+            font-size: 11px;
+        }
     </style>
     <div id="allcommentsetting" style="
         width: 384px;
@@ -405,6 +428,16 @@
                     <div style="margin-top:6px;">
                         <input type="checkbox" id="checkbox3" /><label for="checkbox3">フォントをメイリオにする</label>
                     </div>
+                    <div style="margin-top:6px;">
+                        <input type="checkbox" id="checkbox4" /><label for="checkbox4">コメントアートが崩れないようにする</label>
+                    </div>
+                </div>
+                <div style="padding-top:10px;">
+                    <h3>その他</h3>
+                    <div style="margin-top:6px;">
+                        <input type="checkbox" id="islogger" /><label for="islogger">ログを表示</label>
+                    </div>
+
                 </div>
             </div>
         </div>
@@ -413,6 +446,7 @@
             <div class="wrapper">
                 <a class="fancy-button bg-gradient1">
                     <span class="loadbutton_text">
+                        <i class="fa-solid fa-spinner-third"></i>
                         読み込み開始！
                     </span>
                 </a>

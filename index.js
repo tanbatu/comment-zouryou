@@ -51,6 +51,7 @@ async function LOADCOMMENT() {
     });
 
   async function GET_COMMENT(TIME) {
+    CustomVideoContainer.style = "z-index:1;position:absolute;display:block;";
     let params = {
       thread: threads[2]["id"],
       version: "20090904",
@@ -91,9 +92,11 @@ async function LOADCOMMENT() {
       GET_COMMENT(TIME);
       return;
     }
-    CommentLoadingScreenWrapper.style.background = `linear-gradient(90deg,#0ff 0%,#0ff ${
+    /*CommentLoadingScreenWrapper.style.background = `linear-gradient(90deg,rgb(0, 145, 255,0.9) 0%,#0ff ${
       (LoadedCommentCount / CommentLimit) * 100
-    }%,#999 ${(LoadedCommentCount / CommentLimit) * 100}%,#999 100%)`;
+    }%,rgba(0, 0, 0, .9) ${
+      (LoadedCommentCount / CommentLimit) * 100
+    }%,rgba(0, 0, 0, .9) 100%)`;*/
     logger(
       `[${LoadedCommentCount}/${CommentLimit}]: コメ番${GET_COMMENT_LIST[0].chat.no}まで読み込みました`
     );
@@ -106,7 +109,7 @@ async function LOADCOMMENT() {
       GET_COMMENT_LIST[0].chat.no < 5 ||
       CommentLimit === LoadedCommentCount
     ) {
-      CommentLoadingScreenWrapper.style.background = `#0ff`;
+      CommentLoadingScreenWrapper.style.background = `rgba(0, 0, 0, .9)`;
       logger(COMMENT.length + "件のコメントを読み込みました");
       logger(`NG設定を適用しています...`);
 
@@ -131,6 +134,7 @@ async function LOADCOMMENT() {
 let niconiComments;
 function PLAYCOMMENT() {
   let draw;
+  console.log(COMMENT);
   const apiData = JSON.parse(
     document
       .getElementById("js-initial-watch-data")
@@ -140,7 +144,7 @@ function PLAYCOMMENT() {
     DefaultVideoContainer.style.display = "block";
     document.getElementsByClassName("loadbutton_text")[0].innerText =
       "JSONをダウンロード";
-    CustomVideoContainer.style = "z-index:1;position:absolute;display:block;";
+
     const blob = new Blob([JSON.stringify(COMMENT)], { type: "text/plain" });
     let link = document.getElementById("loaded");
     link.href = URL.createObjectURL(blob); // URLを作成
@@ -149,7 +153,7 @@ function PLAYCOMMENT() {
       //video: videoElement,
       // enableLegacyPiP: true,
       scale: document.getElementById("bar_textsize").value * 0.01,
-      keepCA: true,
+      keepCA: document.getElementById("checkbox4").checked,
 
       config: (Config = {
         contextStrokeOpacity: Number(
@@ -170,7 +174,6 @@ function PLAYCOMMENT() {
     pipVideoElement.srcObject = zouryouCanvasElement.captureStream(60);
     pipVideoElement.muted = true;
     pipVideoElement.play();
-    CommentLoadingScreenWrapper.style.display = "none";
   }
   document
     .getElementsByClassName(
@@ -194,7 +197,7 @@ function PLAYCOMMENT() {
       CustomVideoContainer.style.display = "none";
       DefaultVideoContainer.style.display = "block";
 
-      CommentLoadingScreen.innerHTML = "";
+      //CommentLoadingScreen.innerHTML = "";
       document.getElementById("loaded").style.visibility = "hidden";
       document.getElementById("zenkomebutton").disabled = false;
       document.getElementsByClassName("loadbutton_text")[0].innerText =
@@ -288,9 +291,13 @@ function PREPARE(observe) {
   zouryouCanvasElement = document.getElementById("zouryouCanvasElement");
   pipVideoElement = document.getElementById("pipVideoElement");
   CommentLoadingScreenWrapper = document.createElement("div");
+  CommentLoadingScreenWrapper.id = "CommentLoadingScreenWrapper";
   CommentLoadingScreenWrapper.innerHTML =
     '<div id="CommentLoadingScreen"></div>';
-  PlayerContainer.appendChild(CommentLoadingScreenWrapper);
+  document
+    .getElementsByClassName("CustomVideoContainer InView")[0]
+    .appendChild(CommentLoadingScreenWrapper);
+
   CommentLoadingScreen = document.getElementById("CommentLoadingScreen");
   CustomVideoContainer.style.display = "none";
   zouryouCanvasElement.style =
@@ -410,11 +417,15 @@ function PREPARE(observe) {
     );
   }
 
+  document.getElementById("islogger").addEventListener("change", function () {
+    console.log(this.checked);
+    CommentLoadingScreenWrapper.style.display = this.checked ? "block" : "none";
+  });
+
   document.getElementById("zenkomebutton").onclick = () => {
     let num = document.getElementById("load_num").value;
     CommentLimit = num !== "" ? Number(num) : 5;
-    CommentLoadingScreenWrapper.style =
-      "width: 100%;position: absolute;display:block;height: 100%;background-color: #999;z-index: 6;opacity: 0.8;font-size:20px;color:black;overflow: auto;top:0;left:0";
+    //CommentLoadingScreenWrapper.style.display = "block";
     document.getElementById("zenkomebutton").disabled = true;
 
     LOADCOMMENT();
