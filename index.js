@@ -17,7 +17,7 @@ let CommentLimit = 40;
 
 async function LOADCOMMENT() {
   loading.style.display = "block";
-  document.getElementById("loaded").style.visibility = "visible";
+  //document.getElementById("loaded").style.visibility = "visible";
   document.getElementsByClassName("loadbutton_text")[0].innerText =
     "読み込み中";
   let LoadedCommentCount = 0,
@@ -178,9 +178,11 @@ function PLAYCOMMENT() {
       useLegacy: document.getElementById("checkbox3").checked == false,
     });
     loading.style.display = "none";
+    console.log(niconiComments);
     draw = setInterval(() =>
       niconiComments.drawCanvas(Math.floor(videoElement.currentTime * 100))
     );
+    console.log(videoElement);
     document.getElementsByClassName("CommentRenderer")[0].style.display =
       "none";
     pipVideoElement.srcObject = zouryouCanvasElement.captureStream(60);
