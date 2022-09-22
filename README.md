@@ -1,8 +1,10 @@
 ![コメント増量](https://i.imgur.com/WoHFr2O.png "コメント増量")
+
 コメント増量は、ニコニコ動画のコメント数を増量、及び全コメ表示がブラウザ上で出来る拡張機能です。
 
-##プレビュー
+## プレビュー
 ![コメント増量](https://i.imgur.com/dJTxufy.jpg "コメント増量")
+
 ![コメント増量](https://i.imgur.com/t6A8KYm.jpg "コメント増量")
 ## インストール
 1.[リリースページより](https://github.com/tanbatu/comment-zouryou/releases)Source code (zip)をダウンロード、 展開する。
