@@ -16,11 +16,12 @@ let COMMENT = [];
 let CommentLimit = 40;
 
 async function LOADCOMMENT() {
+  logger("お待ち下さい");
   loading.style.display = "block";
   //document.getElementById("loaded").style.visibility = "visible";
   document.getElementsByClassName("loadbutton_text")[0].innerText =
     "読み込み中";
-  let LoadedCommentCount = 0,
+  let LoadedCommentCount = 1,
     FailCount = 0;
   const parser = new DOMParser();
   const req = await fetch(location.href);
@@ -97,6 +98,7 @@ async function LOADCOMMENT() {
       GET_COMMENT(TIME);
       return;
     }
+    LoadedCommentCount++;
     document.getElementById(
       "progress_bar"
     ).style.background = `linear-gradient(90deg,rgb(0, 145, 255,0.9) 0%,#0ff ${
@@ -104,10 +106,10 @@ async function LOADCOMMENT() {
     }%,rgba(0, 0, 0, .9) ${
       (LoadedCommentCount / CommentLimit) * 100
     }%,rgba(0, 0, 0, .9) 100%)`;
+
     logger(
       `[${LoadedCommentCount}/${CommentLimit}]: コメ番${GET_COMMENT_LIST[0].chat.no}まで読み込みました`
     );
-    LoadedCommentCount++;
 
     COMMENT = COMMENT.concat(GET_COMMENT_LIST);
 
@@ -144,7 +146,6 @@ async function LOADCOMMENT() {
 let niconiComments;
 function PLAYCOMMENT() {
   let draw;
-
   console.log(COMMENT);
   const apiData = JSON.parse(
     document
@@ -165,7 +166,8 @@ function PLAYCOMMENT() {
       enableLegacyPiP: true,
       scale: document.getElementById("bar_textsize").value * 0.01,
       keepCA: document.getElementById("checkbox4").checked,
-
+      showCommentCount: document.getElementById("isdebug").checked,
+      showFPS: document.getElementById("isdebug").checked,
       config: (Config = {
         contextStrokeOpacity: Number(
           document.getElementById("bar_stroke").value
@@ -174,7 +176,6 @@ function PLAYCOMMENT() {
         contextLineWidth: 8,
       }),
 
-      showFPS: false,
       useLegacy: document.getElementById("checkbox3").checked == false,
     });
     loading.style.display = "none";
@@ -185,6 +186,7 @@ function PLAYCOMMENT() {
     console.log(videoElement);
     document.getElementsByClassName("CommentRenderer")[0].style.display =
       "none";
+    pipVideoElement.style.display = "block";
     pipVideoElement.srcObject = zouryouCanvasElement.captureStream(60);
     pipVideoElement.muted = true;
     pipVideoElement.play();
@@ -210,10 +212,12 @@ function PLAYCOMMENT() {
         "block";
       CustomVideoContainer.style.display = "none";
       DefaultVideoContainer.style.display = "block";
+      LoadedCommentCount = 1;
 
       //CommentLoadingScreen.innerHTML = "";
       document.getElementById("loaded").style.visibility = "hidden";
       document.getElementById("zenkomebutton").disabled = false;
+      pipVideoElement.style.display = "none";
       document.getElementsByClassName("loadbutton_text")[0].innerText =
         "読み込み開始！";
       href = location.href;
@@ -444,7 +448,11 @@ function PREPARE(observe) {
   document.getElementById("iscanvas").addEventListener("change", function () {
     niconiComments.video = this.checked ? videoElement : null;
   });
-
+  document.getElementById("isdebug").addEventListener("change", function () {
+    niconiComments.showCommentCount =
+      document.getElementById("isdebug").checked;
+    niconiComments.showFPS = document.getElementById("isdebug").checked;
+  });
   document.getElementById("zenkomebutton").onclick = () => {
     let num = document.getElementById("load_num").value;
     CommentLimit = num !== "" ? Number(num) : 5;
