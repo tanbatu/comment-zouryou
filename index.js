@@ -509,7 +509,7 @@ function PREPARE(observe) {
   }, 1000);
 }
 
-let index_html = chrome.runtime.getURL("files/index.html");
+let index_html = chrome.runtime.getURL("files/setting.html");
 let wave_image = chrome.runtime.getURL("lib/wave.png");
 let logo_image = chrome.runtime.getURL("lib/logo2.png");
 let load_image = chrome.runtime.getURL("lib/load.svg");
