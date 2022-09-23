@@ -10,6 +10,7 @@ let CommentRenderer,
   CommentLoadingScreenWrapper,
   loading,
   loading_text,
+  link,
   OLD_DATE,
   OLD_TIME;
 let COMMENT = [];
@@ -158,7 +159,8 @@ function PLAYCOMMENT() {
       "JSONをダウンロード";
 
     const blob = new Blob([JSON.stringify(COMMENT)], { type: "text/plain" });
-    let link = document.getElementById("loaded");
+
+    link.style.visibility = "visible";
     link.href = URL.createObjectURL(blob); // URLを作成
     link.download = apiData.video.id + ".json"; // ファイル名
     niconiComments = new NiconiComments(zouryouCanvasElement, COMMENT, {
@@ -213,7 +215,7 @@ function PLAYCOMMENT() {
       CustomVideoContainer.style.display = "none";
       DefaultVideoContainer.style.display = "block";
       LoadedCommentCount = 1;
-
+      link.style.visibility = "hidden";
       //CommentLoadingScreen.innerHTML = "";
       document.getElementById("loaded").style.visibility = "hidden";
       document.getElementById("zenkomebutton").disabled = false;
@@ -322,6 +324,7 @@ function PREPARE(observe) {
     .appendChild(CommentLoadingScreenWrapper);
 
   CommentLoadingScreen = document.getElementById("CommentLoadingScreen");
+  link = document.getElementById("loaded");
   CustomVideoContainer.style.display = "none";
   zouryouCanvasElement.style =
     "position:absolute;top:0;left:0;width:100%;height:100%;z-index:0;display:none";
