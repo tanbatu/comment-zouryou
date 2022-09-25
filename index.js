@@ -43,108 +43,85 @@ async function LOADCOMMENT() {
     return tmpArr.join(sDelimiter);
   };
   //コメント取得
-  logger(CommentLimit + "回読み込みます。");
-  const threads = apiData.comment.threads;
-  let channel_URL =
-    "https://flapi.nicovideo.jp/api/getthreadkey?thread=" + threads[2]["id"];
+  const nvComment = apiData.comment.nvComment,
+    totalThreadCount = nvComment.params.targets.length * CommentLimit;
+  let fetchedThreadCount = 0;
+  logger(`${nvComment.params.targets.length}スレッドをそれぞれ${CommentLimit}回読み込みます。`);
 
-  let channel_params = "";
-  await fetch(channel_URL)
-    .then((response) => response.text())
-    .then((data) => {
-      channel_params = "&" + data;
-    });
-
-  async function GET_COMMENT(TIME) {
-    CustomVideoContainer.style = "z-index:1;position:absolute;display:block;";
-    let params = {
-      thread: threads[2]["id"],
-      version: "20090904",
-      scores: "1",
-      nicoru: "3",
-      fork: 0,
-      language: "0",
-      when: TIME,
-      res_from: "-1000",
-    };
-    let url = `${threads[1]["server"]}/api.json/thread?${joinObj(
-      params,
-      "=",
-      "&"
-    )}${channel_params}`;
-    logger(
-      `[${LoadedCommentCount}/${CommentLimit}]: ${url}を読み込んでいます...`,
-      false
-    );
-
-    const req = await fetch(url, {
-      method: "GET",
-    });
-    const res = await req.text();
-    let GET_COMMENT_LIST;
-    try {
-      GET_COMMENT_LIST = JSON.parse(res);
-      GET_COMMENT_LIST = GET_COMMENT_LIST.slice(2);
-      TIME = GET_COMMENT_LIST[0].chat.date;
-    } catch (e) {
-      TIME -= 100;
-      FailCount++;
-      if (FailCount > 10) {
-        PLAYCOMMENT();
-        throw new Error("fail to get comment");
+  const date = OLD_DATE.value === "" ? new Date() : new Date(OLD_DATE.value + " " + OLD_TIME.value);
+  const comments = [];
+  for (const i in nvComment.params.targets) {
+    const thread = nvComment.params.targets[i];
+    const baseData = {
+      threadKey: nvComment.threadKey,
+      params: {
+        language: nvComment.params.language,
+        targets: [thread]
       }
-      logger(
-        `[${LoadedCommentCount}/${CommentLimit}]: コメントの参照に失敗しました。お待ち下さい。`
-      );
-      GET_COMMENT(TIME);
-      return;
     }
-    LoadedCommentCount++;
-    document.getElementById(
-      "progress_bar"
-    ).style.background = `linear-gradient(90deg,rgb(0, 145, 255,0.9) 0%,#0ff ${
-      (LoadedCommentCount / CommentLimit) * 100
-    }%,rgba(0, 0, 0, .9) ${
-      (LoadedCommentCount / CommentLimit) * 100
-    }%,rgba(0, 0, 0, .9) 100%)`;
-
-    logger(
-      `[${LoadedCommentCount}/${CommentLimit}]: コメ番${GET_COMMENT_LIST[0].chat.no}まで読み込みました`
-    );
-
-    COMMENT = COMMENT.concat(GET_COMMENT_LIST);
-
-    FailCount = 0;
-    if (
-      GET_COMMENT_LIST[0].chat.no < 5 ||
-      CommentLimit === LoadedCommentCount
-    ) {
-      CommentLoadingScreenWrapper.style.background = `rgba(0, 0, 0, .9)`;
-      logger(COMMENT.length + "件のコメントを読み込みました");
-      logger(`NG設定を適用しています`);
-
-      COMMENT = await COMMENT_NG();
-      logger(COMMENT.length + "件に減りました");
-      logger(`描画準備中`);
+    let lastTime = Math.floor(date.getTime() / 1000);
+    for (let j = 0; j < CommentLimit; j++) {
+      const req = await fetch(`${nvComment.server}/v1/threads`, {
+        method: "POST",
+        headers: {
+          "content-type": "text/plain;charset=UTF-8",
+          "x-client-os-type": "others",
+          "x-frontend-id": "6",
+          "x-frontend-version": "0",
+        },
+        body: JSON.stringify({
+          ...baseData, additionals: {
+            res_from: -1000,
+            when: lastTime,
+          }
+        })
+      });
+      const res = await req.json();
+      console.log(res, JSON.stringify({
+        ...baseData, additionals: {
+          res_from: -1000,
+          when: lastTime,
+        }
+      }));
+      comments.push(...res.data.threads[0].comments);
       document.getElementById(
         "progress_bar"
-      ).style.background = `linear-gradient(90deg,rgb(0, 145, 255,0.9) 0%,#0ff 100%`;
-      PLAYCOMMENT();
-      return;
+      ).style.background = `linear-gradient(90deg,rgb(0, 145, 255,0.9) 0%,#0ff ${
+        ((fetchedThreadCount + j) / totalThreadCount) * 100
+      }%,rgba(0, 0, 0, .9) ${
+        ((fetchedThreadCount + j) / totalThreadCount) * 100
+      }%,rgba(0, 0, 0, .9) 100%)`;
+      if (res.data.threads[0].comments.length === 0 || res.data.threads[0].comments[0].no < 5) {
+        logger(
+          `[${fetchedThreadCount + j}/${totalThreadCount}]: スレッドの先頭まで読み込みました`
+        );
+        break;
+      }
+      logger(
+        `[${fetchedThreadCount + j}/${totalThreadCount}]: コメ番${res.data.threads[0].comments[0].no}まで読み込みました`
+      );
+      lastTime = Math.floor(new Date(res.data.threads[0].comments[0].postedAt).getTime() / 1000);
+      if (CommentLimit > 1) {
+        await sleep(1000);
+      }
     }
-    if (CommentLimit > 30) {
-      await sleep(1000);
-    }
-    GET_COMMENT(TIME);
+    fetchedThreadCount += CommentLimit;
   }
-  if (OLD_DATE.value == "") {
-    GET_COMMENT(new Date().getTime() / 1000);
-  } else {
-    let LOAD_DATE = OLD_DATE.value + " " + OLD_TIME.value;
-    GET_COMMENT(new Date(LOAD_DATE).getTime() / 1000);
-  }
+  CommentLoadingScreenWrapper.style.background = `rgba(0, 0, 0, .9)`;
+  logger(comments.length + "件のコメントを読み込みました");
+  logger(`NG設定を適用しています`);
+
+  logger(comments.length + "件に減りました");
+  COMMENT = [{commentCount: comments.length, comments: await COMMENT_NG(comments), fork: "comment-zouryou", id: 0}];
+  logger(`描画準備中`);
+  document.getElementById(
+    "progress_bar"
+  ).style.background = `linear-gradient(90deg,rgb(0, 145, 255,0.9) 0%,#0ff 100%`;
+  PLAYCOMMENT();
 }
+
 let niconiComments;
+
 function PLAYCOMMENT() {
   let draw;
   console.log(COMMENT);
@@ -153,16 +130,20 @@ function PLAYCOMMENT() {
       .getElementById("js-initial-watch-data")
       .getAttribute("data-api-data")
   );
+
   async function setup() {
     DefaultVideoContainer.style.display = "block";
     document.getElementsByClassName("loadbutton_text")[0].innerText =
       "JSONをダウンロード";
 
-    const blob = new Blob([JSON.stringify(COMMENT)], { type: "text/plain" });
+    const blob = new Blob([JSON.stringify(COMMENT)], {type: "text/plain"});
 
     link.style.visibility = "visible";
     link.href = URL.createObjectURL(blob); // URLを作成
     link.download = apiData.video.id + ".json"; // ファイル名
+
+    videoElement = document.getElementById("MainVideoPlayer").children[0];
+
     niconiComments = new NiconiComments(zouryouCanvasElement, COMMENT, {
       video: document.getElementById("iscanvas").checked ? videoElement : null,
       enableLegacyPiP: true,
@@ -177,13 +158,15 @@ function PLAYCOMMENT() {
 
         contextLineWidth: 8,
       }),
-
+      format: "v1",
       useLegacy: document.getElementById("checkbox3").checked == false,
     });
     loading.style.display = "none";
+    CustomVideoContainer.style.display = "block";
     console.log(niconiComments);
-    draw = setInterval(() =>
-      niconiComments.drawCanvas(Math.floor(videoElement.currentTime * 100))
+    draw = setInterval(() => {
+        niconiComments.drawCanvas(Math.floor(videoElement.currentTime * 100));
+      }
     );
     console.log(videoElement);
     document.getElementsByClassName("CommentRenderer")[0].style.display =
@@ -193,6 +176,7 @@ function PLAYCOMMENT() {
     pipVideoElement.muted = true;
     pipVideoElement.play();
   }
+
   document
     .getElementsByClassName(
       "ActionButton ControllerButton CommentOnOffButton"
@@ -226,7 +210,7 @@ function PLAYCOMMENT() {
       COMMENT = [];
     }
   });
-  observer.observe(document, { childList: true, subtree: true });
+  observer.observe(document, {childList: true, subtree: true});
   setTimeout(setup, 1000);
 }
 
@@ -254,32 +238,34 @@ const sleep = (time) => {
 
 let NG_LIST_COMMAND = [];
 let NG_LIST_COMMENT = [];
-const COMMENT_NG = () => {
+const COMMENT_NG = (comments) => {
   return new Promise((resolve) => {
-    COMMENT.forEach((COMMENT_, index) => {
-      if (COMMENT_.chat.mail == undefined) {
-        COMMENT_.chat.mail = "";
+    for (const i in comments) {
+      const comment = comments[i];
+      if (comment.commands === undefined) {
+        comment.commands = [];
+      } else {
+        comment.commands = comment.commands.map((value) => value.toLowerCase());
       }
-    });
+    }
     NG_LIST_COMMAND.forEach((NG) => {
-      let COMMAND = NG.toLowerCase().split(" ");
-      COMMENT = COMMENT.filter(function (COMMENT) {
-        let ng_point = COMMAND.length;
-        COMMAND.forEach((COMMAND) => {
-          if (COMMENT.chat.mail.toLowerCase().includes(COMMAND)) {
+      let commands = NG.toLowerCase().split(" ");
+      comments = comments.filter((comment) => {
+        let ng_point = command.length;
+        commands.forEach((command) => {
+          if (comment.commands.includes(command)) {
             ng_point -= 1;
           }
         });
         return ng_point > 0;
       });
     });
-    NG_LIST_COMMENT.forEach(
-      (NG) =>
-        (COMMENT = COMMENT.filter(
-          (COMMENT) => COMMENT.chat.content.includes(NG) == false
-        ))
+    NG_LIST_COMMENT.forEach((NG) =>
+      (comments = comments.filter(
+        (comment) => comment.body.includes(NG) === false
+      ))
     );
-    resolve(COMMENT);
+    resolve(comments);
   });
 };
 
@@ -289,10 +275,9 @@ function PREPARE(observe) {
     .insertAdjacentHTML("beforeend", setting_html);
   let customStyle = document.createElement("style");
   customStyle.innerHTML =
-    ".CustomVideoContainer{width: 640px;height: 360px;}body.is-large:not(.is-fullscreen) .CustomVideoContainer {width: 854px;height: 480px;}body.is-fullscreen .CustomVideoContainer {width: 100vw !important;height: 100vh !important;}@media screen and (min-width: 1286px) and (min-height: 590px){body.is-autoResize:not(.is-fullscreen) .CustomVideoContainer {width: 854px;height: 480px;}@media screen and (min-width: 1392px) and (min-height: 650px){body.is-autoResize:not(.is-fullscreen) .CustomVideoContainer {width: 960px;height: 540px;}} @media screen and (min-width: 1736px) and (min-height: 850px) {body.is-autoResize:not(.is-fullscreen) .CustomVideoContainer {width: 1280px;height: 720px;}}}";
+    ".CustomVideoContainer{width: 640px;height: 360px;position: absolute;top: 0;left: 0;}body.is-large:not(.is-fullscreen) .CustomVideoContainer {width: 854px;height: 480px;}body.is-fullscreen .CustomVideoContainer {width: 100vw !important;height: 100vh !important;}@media screen and (min-width: 1286px) and (min-height: 590px){body.is-autoResize:not(.is-fullscreen) .CustomVideoContainer {width: 854px;height: 480px;}@media screen and (min-width: 1392px) and (min-height: 650px){body.is-autoResize:not(.is-fullscreen) .CustomVideoContainer {width: 960px;height: 540px;}} @media screen and (min-width: 1736px) and (min-height: 850px) {body.is-autoResize:not(.is-fullscreen) .CustomVideoContainer {width: 1280px;height: 720px;}}}";
   document.body.appendChild(customStyle);
   CommentRenderer = document.getElementsByClassName("CommentRenderer")[0];
-  videoElement = document.getElementById("MainVideoPlayer").children[0];
   VideoSymbolContainer = document.getElementsByClassName(
     "VideoSymbolContainer"
   )[0];
@@ -307,7 +292,7 @@ function PREPARE(observe) {
   for (let i = 0; i < 2; i++) {
     document.getElementsByClassName("wave")[
       i
-    ].style = `background:url(${wave_image});
+      ].style = `background:url(${wave_image});
       background-size: 1000px 50px;`;
   }
   document.getElementById("logo").src = logo_image;
@@ -326,6 +311,7 @@ function PREPARE(observe) {
   CommentLoadingScreen = document.getElementById("CommentLoadingScreen");
   link = document.getElementById("loaded");
   CustomVideoContainer.style.display = "none";
+  CustomVideoContainer.style.zIndex = "1";
   zouryouCanvasElement.style =
     "position:absolute;top:0;left:0;width:100%;height:100%;z-index:0;display:none";
   pipVideoElement.style =
@@ -374,7 +360,7 @@ function PREPARE(observe) {
     if (ng_storage == null || ng_storage == "[null]") {
       localStorage.setItem(
         "ng_storage",
-        JSON.stringify({ command: [], comment: [] })
+        JSON.stringify({command: [], comment: []})
       );
     } else {
       ngarray = JSON.parse(ng_storage);
@@ -403,6 +389,7 @@ function PREPARE(observe) {
       }
     }
   }
+
   if (!observe) ng_element();
   document.getElementById("form_command").onclick = () => {
     ng_storage = localStorage.getItem("ng_storage");
@@ -494,6 +481,7 @@ function PREPARE(observe) {
         );
       }
     }
+
     ShowButton();
 
     document
