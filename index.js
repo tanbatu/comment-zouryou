@@ -163,6 +163,9 @@ function PLAYCOMMENT() {
     link.style.visibility = "visible";
     link.href = URL.createObjectURL(blob); // URLを作成
     link.download = apiData.video.id + ".json"; // ファイル名
+
+    videoElement = document.getElementById("MainVideoPlayer").children[0];
+
     niconiComments = new NiconiComments(zouryouCanvasElement, COMMENT, {
       video: document.getElementById("iscanvas").checked ? videoElement : null,
       enableLegacyPiP: true,
@@ -292,7 +295,6 @@ function PREPARE(observe) {
     ".CustomVideoContainer{width: 640px;height: 360px;}body.is-large:not(.is-fullscreen) .CustomVideoContainer {width: 854px;height: 480px;}body.is-fullscreen .CustomVideoContainer {width: 100vw !important;height: 100vh !important;}@media screen and (min-width: 1286px) and (min-height: 590px){body.is-autoResize:not(.is-fullscreen) .CustomVideoContainer {width: 854px;height: 480px;}@media screen and (min-width: 1392px) and (min-height: 650px){body.is-autoResize:not(.is-fullscreen) .CustomVideoContainer {width: 960px;height: 540px;}} @media screen and (min-width: 1736px) and (min-height: 850px) {body.is-autoResize:not(.is-fullscreen) .CustomVideoContainer {width: 1280px;height: 720px;}}}";
   document.body.appendChild(customStyle);
   CommentRenderer = document.getElementsByClassName("CommentRenderer")[0];
-  videoElement = document.getElementById("MainVideoPlayer").children[0];
   VideoSymbolContainer = document.getElementsByClassName(
     "VideoSymbolContainer"
   )[0];
