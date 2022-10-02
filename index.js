@@ -105,7 +105,7 @@ async function LOADCOMMENT() {
           logger("旧コメントAPIに切り替えています...");
           isLoggedIn=false;
           j--;
-          totalThreadCount /= 3;
+          totalThreadCount = CommentLimit;
           await prepareLegacy();
           continue;
         }
