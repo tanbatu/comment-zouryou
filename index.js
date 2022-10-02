@@ -153,7 +153,7 @@ async function LOADCOMMENT() {
         for (const comment of comments_tmp){
           comments.push({
             body: comment.chat.content,
-            commands: comment.chat.mail.split(/\s+/g),
+            commands: (comment.chat.mail||"").split(/\s+/g),
             id: 0,
             isMyPost: false,
             isPremium: comment.chat.premium === 1,
