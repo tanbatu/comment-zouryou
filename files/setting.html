@@ -424,6 +424,9 @@
                             </div>
                         </div>
                     </div>
+                    <div style="margin-top:6px;">
+                        <input type="checkbox" id="iseasy" /><label for="iseasy">かんたんコメントを表示しない</label>
+                    </div>
                 </div>
                 <div style="padding-top:10px;">
                     <h3>描画設定</h3>
@@ -445,7 +448,12 @@
                             max="100">
                         100
                     </div>
-
+                    <div style="padding-top:6px;">
+                        <b>フレームレート</b><small class="range_val" id="val_alpha">30</small><br>
+                        0 <input class="range_bar" id="bar_fps" type="range" name="speed" step="1" value="30" min="1"
+                            max="60">
+                        60
+                    </div>
                     <div style="margin-top:6px;">
                         <input type="checkbox" id="checkbox3" /><label for="checkbox3">フォントをメイリオにする</label>
                     </div>
