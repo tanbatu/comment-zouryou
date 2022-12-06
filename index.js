@@ -207,7 +207,7 @@ function PLAYCOMMENT() {
     console.log(videoElement);
     document.getElementsByClassName("CommentRenderer")[0].style.display =
       "none";
-    pipVideoElement.style.display = "block";
+
     pipVideoElement.srcObject = zouryouCanvasElement.captureStream(60);
     pipVideoElement.muted = true;
     pipVideoElement.play();
@@ -350,9 +350,9 @@ function PREPARE(observe) {
   CustomVideoContainer.style.display = "none";
   CustomVideoContainer.style.zIndex = "1";
   zouryouCanvasElement.style =
-    "position:absolute;top:0;left:0;width:100%;height:100%;z-index:0;display:none";
+    "position:absolute;top:0;left:0;width:100%;height:100%;z-index:0;display:block";
   pipVideoElement.style =
-    "position:absolute;top:0;left:0;width:100%;height:100%;z-index:1;pointer-events:all";
+    "position:absolute;top:0;left:0;width:100%;height:100%;z-index:1;pointer-events:all;display:none";
   pipVideoElement.onpause = () => {
     pipVideoElement.play();
   };
@@ -474,6 +474,8 @@ function PREPARE(observe) {
   });
   document.getElementById("iscanvas").addEventListener("change", function () {
     niconiComments.video = this.checked ? videoElement : null;
+    pipVideoElement.style.display = this.checked ? "block" : "none";
+    zouryouCanvasElement.style.display = this.checked ? "none" : "block";
   });
   document.getElementById("isdebug").addEventListener("change", function () {
     niconiComments.showCommentCount =
