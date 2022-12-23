@@ -461,7 +461,7 @@ function PREPARE(observe) {
         val_stroke[i].innerText = e.target.value;
 
         if (this.id == "bar_alpha") {
-          pipVideoElement.style.opacity = e.target.value * 0.01;
+          zouryouCanvasElement.style.opacity = e.target.value * 0.01;
         }
       },
       false
