@@ -1,23 +1,35 @@
 {
-    "manifest_version": 3,
-    "name": "コメント増量",
-    "description": "ニコニコ動画のコメントの表示量を増やす",
-    "version": "3.0",
-    "content_scripts": [{
-        "matches": ["https://www.nicovideo.jp/watch/*", "https://nicovideo.jp/watch/*"],
-        "js": ["lib/niconicomments.js", "index.js"],
-
-        "run_at": "document_end"
-    }],
-"web_accessible_resources": [
+  "manifest_version": 3,
+  "name": "コメント増量",
+  "description": "ニコニコ動画のコメントの表示量を増やす",
+  "version": "3.2",
+  "content_scripts": [
     {
-      "resources": ["lib/*","files/*"],
-      "matches": ["<all_urls>"]
+      "matches": [
+        "https://www.nicovideo.jp/watch/*",
+        "https://nicovideo.jp/watch/*"
+      ],
+      "js": [
+        "lib/niconicomments.js",
+        "index.js"
+      ],
+      "run_at": "document_end"
     }
   ],
-    "icons": {
-        "16": "icons/16.png",
-        "48": "icons/48.png",
-        "128": "icons/128.png"
+  "web_accessible_resources": [
+    {
+      "resources": [
+        "lib/*",
+        "files/*"
+      ],
+      "matches": [
+        "<all_urls>"
+      ]
     }
+  ],
+  "icons": {
+    "16": "icons/16.png",
+    "48": "icons/48.png",
+    "128": "icons/128.png"
+  }
 }
