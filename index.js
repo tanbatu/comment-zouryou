@@ -176,7 +176,7 @@ function PLAYCOMMENT() {
     videoElement = document.getElementById("MainVideoPlayer").children[0];
 
     niconiComments = new NiconiComments(zouryouCanvasElement, COMMENT, {
-      video: document.getElementById("iscanvas").checked ? videoElement : null,
+      video: document.getElementById("iscanvas").checked ? videoElement : undefined,
       enableLegacyPiP: true,
       scale: document.getElementById("bar_textsize").value * 0.01,
       keepCA: document.getElementById("checkbox4").checked,
