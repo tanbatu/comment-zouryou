@@ -383,10 +383,10 @@ display:block;-webkit-mask-image: url(${Imagedata});-webkit-mask-size: ${videoEl
     return net.segmentPerson(img, option);
   }
   // 绘制帧数据到canvas
-
+  let lastCurrentTime = -1;
   async function drawCanvas() {
-    if (!net) return;
-
+    if (!net || videoElement.currentTime === lastCurrentTime) return;
+    lastCurrentTime = videoElement.currentTime;
     const segmentation = await segmentPerson(videoElement);
 
     const colorMask = bodyPix.toMask(segmentation, false);
