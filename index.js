@@ -314,7 +314,7 @@ function PLAYCOMMENT() {
       comment_list.style.visibility = "hidden";
     });
   LIST_COMMENT();
-  DANMAKU_SUPER();
+  void DANMAKU_SUPER();
   document
     .getElementsByClassName(
       "ActionButton ControllerButton CommentOnOffButton"
@@ -352,7 +352,7 @@ function PLAYCOMMENT() {
   setTimeout(setup, 1000);
 }
 
-function DANMAKU_SUPER() {
+async function DANMAKU_SUPER() {
   let ctx = SuperDanmakuCanvasElement.getContext("2d");
   let net;
   async function loadBodyPix() {
@@ -394,11 +394,10 @@ display:block;-webkit-mask-image: url(${Imagedata});-webkit-mask-size: ${videoEl
     data = SuperDanmakuCanvasElement.toDataURL("image/png");
     mask(data);
   }
-
+  await loadBodyPix();
   setInterval(() => {
     drawCanvas();
   }, 100);
-  loadBodyPix();
 }
 
 function LIST_COMMENT() {
