@@ -342,6 +342,23 @@
             background-color: #00000075;
             z-index: 300;
         }
+
+        .list_comment {
+            padding: 4px 0px;
+        }
+
+        .list_comment:nth-child(2n-1) {
+            background-color: rgb(230, 230, 230);
+        }
+
+        #bottom {
+            margin: 0px 3px;
+            height: 90%;
+            overflow: hidden;
+            width: 100%;
+            position: absolute;
+            bottom: 30px;
+        }
     </style>
     <div id="allcommentsetting" style="
         width: 384px;
@@ -395,7 +412,9 @@
 
 
             <div style="padding:10px;color:rgb(75, 75, 75)">
+
                 <div style="padding-top:40px;" class="DateTimeInput">
+
                     <h3>始点</h3>
                     <input id="zenkome-date" class="DateTimeInput-date" type="date" value="">
                     <input style="margin-left:10px" id="zenkome-time" class="DateTimeInput-time" type="time"
@@ -428,6 +447,7 @@
                         <input type="checkbox" id="iseasy" /><label for="iseasy">かんたんコメントを表示しない</label>
                     </div>
                 </div>
+                <button id="comment_list_open">コメントリスト</button>
                 <div style="padding-top:10px;">
                     <h3>描画設定</h3>
                     <div style="padding-top:6px;">
@@ -476,7 +496,6 @@
                 </div>
             </div>
         </div>
-        <small style="margin-left:13px">視聴方法を「http」にして実行してください。</small>
         <div id="zenkomebutton"
             style="position:absolute;width:100%;height:50px;bottom:6;background-color:rgb(255, 255, 255);">
             <div class="wrapper">
@@ -489,6 +508,16 @@
         </div>
         <a id="loaded" style="position:absolute;z-index:2;width:100%;height:50px;bottom:6;visibility: hidden;">
         </a>
+        <div id="comment_list"
+            style="position:absolute;top:0;left:0;z-index:500;background-color: white;width: 100%;height: 100%;visibility: hidden;">
+            <button id="comment_list_exit">閉じる</button>
+            <div id="bottom">
+                <div id="comment_list_comments" style="position:absolute;bottom:0px;width:100%">
+
+                </div>
+            </div>
+
+        </div>
     </div>
 
 

@@ -1,5 +1,6 @@
 let CommentRenderer,
   zouryouCanvasElement,
+  SuperDanmakuCanvasElement,
   videoElement,
   pipVideoElement,
   VideoSymbolContainer,
@@ -210,7 +211,7 @@ async function LOADCOMMENT() {
       }%,rgba(0, 0, 0, .9) ${
         ((fetchedThreadCount + j) / totalThreadCount) * 100
       }%,rgba(0, 0, 0, .9) 100%)`;
-      if (CommentLimit > 20) {
+      if (CommentLimit > 59) {
         await sleep(1000);
       }
     }
@@ -301,7 +302,19 @@ function PLAYCOMMENT() {
     pipVideoElement.muted = true;
     pipVideoElement.play();
   }
-
+  const comment_list = document.getElementById("comment_list");
+  document
+    .getElementById("comment_list_open")
+    .addEventListener("click", function () {
+      comment_list.style.visibility = "visible";
+    });
+  document
+    .getElementById("comment_list_exit")
+    .addEventListener("click", function () {
+      comment_list.style.visibility = "hidden";
+    });
+  LIST_COMMENT();
+  DANMAKU_SUPER();
   document
     .getElementsByClassName(
       "ActionButton ControllerButton CommentOnOffButton"
@@ -337,6 +350,81 @@ function PLAYCOMMENT() {
   });
   observer.observe(document, { childList: true, subtree: true });
   setTimeout(setup, 1000);
+}
+
+function DANMAKU_SUPER() {
+  let ctx = SuperDanmakuCanvasElement.getContext("2d");
+  let net;
+  async function loadBodyPix() {
+    if (net) return BodynetPix;
+    net = await bodyPix.load();
+  }
+  function mask(Imagedata) {
+    zouryouCanvasElement.style = `position:absolute;
+top:0;
+left:0;
+width:100%;
+height:100%;
+z-index:0;
+display:block;-webkit-mask-image: url(${Imagedata});-webkit-mask-size: ${videoElement.clientWidth}px ${videoElement.clientHeight}px; `;
+  }
+  function segmentPerson(img) {
+    const option = {
+      flipHorizontal: false,
+      internalResolution: 0.4,
+      segmentationThreshold: 0.7,
+      maxDetections: 5,
+      scoreThreshold: 0.3,
+      nmsRadius: 20,
+      minKeypointScore: 0.6,
+      refineSteps: 10,
+    };
+
+    return net.segmentPerson(img, option);
+  }
+  // 绘制帧数据到canvas
+
+  async function drawCanvas() {
+    if (!net) return;
+
+    const segmentation = await segmentPerson(videoElement);
+
+    const colorMask = bodyPix.toMask(segmentation, false);
+    ctx.putImageData(colorMask, 0, 0);
+    data = SuperDanmakuCanvasElement.toDataURL("image/png");
+    mask(data);
+  }
+
+  setInterval(() => {
+    drawCanvas();
+  }, 100);
+  loadBodyPix();
+}
+
+function LIST_COMMENT() {
+  COMMENT[0].comments.sort(function (a, b) {
+    if (a.vposMs < b.vposMs) return -1;
+    if (a.vposMs > b.vposMs) return 1;
+    return 0;
+  });
+  console.log(COMMENT[0].comments);
+  setInterval(() => {
+    let passIndex = COMMENT[0].comments.findIndex(function (element) {
+      return element.vposMs > Math.floor(videoElement.currentTime * 1000);
+    });
+
+    console.log(passIndex);
+    document.getElementById("comment_list_comments").innerHTML = "";
+    for (let i = 0; i < 30; i++) {
+      let body = COMMENT[0].comments[passIndex - i]?.body;
+      if (body == undefined) body = "";
+      let commentElement = document.createElement("div");
+      commentElement.className = "list_comment";
+      commentElement.innerHTML = `<p>${body}</p>`;
+      document.getElementById("comment_list_comments").prepend(commentElement);
+    }
+    console.log();
+  }, 50);
 }
 
 const logger = (msg, load) => {
@@ -412,8 +500,7 @@ function PREPARE(observe) {
     "InView VideoContainer"
   )[0];
   CustomVideoContainer = document.createElement("div");
-  CustomVideoContainer.innerHTML =
-    '<div class="CommentRenderer"><canvas id="zouryouCanvasElement" width="1920" height="1080"></canvas><video id="pipVideoElement"></video></div>';
+  CustomVideoContainer.innerHTML = `<div class="CommentRenderer"><canvas id="zouryouCanvasElement" width="1920" height="1080"></canvas><canvas id="SuperDanmakuCanvasElement" width="640" height="360"></canvas><video id="pipVideoElement"></video></div>`;
   CustomVideoContainer.classList.add("CustomVideoContainer", "InView");
   for (let i = 0; i < 2; i++) {
     document.getElementsByClassName("wave")[
@@ -425,6 +512,17 @@ function PREPARE(observe) {
   document.getElementById("loading_image").src = load_image;
   PlayerContainer.children[0].after(CustomVideoContainer);
   zouryouCanvasElement = document.getElementById("zouryouCanvasElement");
+  SuperDanmakuCanvasElement = document.getElementById(
+    "SuperDanmakuCanvasElement"
+  );
+  videoElement = document.getElementById("MainVideoPlayer").children[0];
+  videoElement.width = 640;
+  videoElement.height = 360;
+  SuperDanmakuCanvasElement.width = videoElement.width;
+
+  SuperDanmakuCanvasElement.height = videoElement.height;
+
+  console.log(videoElement);
   pipVideoElement = document.getElementById("pipVideoElement");
   CommentLoadingScreenWrapper = document.createElement("div");
   CommentLoadingScreenWrapper.id = "CommentLoadingScreenWrapper";
@@ -440,6 +538,8 @@ function PREPARE(observe) {
   CustomVideoContainer.style.zIndex = "1";
   zouryouCanvasElement.style =
     "position:absolute;top:0;left:0;width:100%;height:100%;z-index:0;display:block";
+  SuperDanmakuCanvasElement.style =
+    "position:absolute;top:0;left:0;width:100%;height:100%;z-index:1;display:block;opacity:0;";
   pipVideoElement.style =
     "position:absolute;top:0;left:0;width:100%;height:100%;z-index:1;pointer-events:all;display:none";
   pipVideoElement.onpause = () => {

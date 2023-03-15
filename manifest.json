@@ -10,6 +10,8 @@
         "https://nicovideo.jp/watch/*"
       ],
       "js": [
+        "lib/tf.js",
+        "lib/body-pix.js",
         "lib/niconicomments.js",
         "index.js"
       ],
