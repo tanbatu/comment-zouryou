@@ -239,7 +239,7 @@ async function LOADCOMMENT() {
   PLAYCOMMENT();
 }
 
-let niconiComments;
+let niconiComments, comment_list_active;
 
 function PLAYCOMMENT() {
   let draw;
@@ -307,11 +307,13 @@ function PLAYCOMMENT() {
     .getElementById("comment_list_open")
     .addEventListener("click", function () {
       comment_list.style.visibility = "visible";
+      comment_list_active = true;
     });
   document
     .getElementById("comment_list_exit")
     .addEventListener("click", function () {
       comment_list.style.visibility = "hidden";
+      comment_list_active = false;
     });
   LIST_COMMENT();
   void DANMAKU_SUPER();
@@ -408,6 +410,7 @@ function LIST_COMMENT() {
   });
   console.log(COMMENT[0].comments);
   setInterval(() => {
+    if (!comment_list_active)return;
     let passIndex = COMMENT[0].comments.findIndex(function (element) {
       return element.vposMs > Math.floor(videoElement.currentTime * 1000);
     });
