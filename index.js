@@ -14,7 +14,8 @@ let CommentRenderer,
   link,
   OLD_DATE,
   OLD_TIME,
-  DRAW_;
+  DRAW_,
+  net;
 let COMMENT = [];
 let CommentLimit = 40;
 
@@ -355,20 +356,18 @@ function PLAYCOMMENT() {
 }
 
 async function DANMAKU_SUPER() {
+  let ismask = document.getElementById("ismask");
   let ctx = SuperDanmakuCanvasElement.getContext("2d");
-  let net;
-  async function loadBodyPix() {
-    if (net) return BodynetPix;
-    net = await bodyPix.load();
-  }
+
   function mask(Imagedata) {
-    zouryouCanvasElement.style = `position:absolute;
-top:0;
-left:0;
-width:100%;
-height:100%;
-z-index:0;
-display:block;-webkit-mask-image: url(${Imagedata});-webkit-mask-size: ${videoElement.clientWidth}px ${videoElement.clientHeight}px; `;
+    zouryouCanvasElement.style.setProperty(
+      "-webkit-mask-image",
+      `url(${Imagedata})`
+    );
+    zouryouCanvasElement.style.setProperty(
+      "-webkit-mask-size",
+      `${videoElement.clientWidth}px ${videoElement.clientHeight}px `
+    );
   }
   function segmentPerson(img) {
     const option = {
@@ -396,11 +395,13 @@ display:block;-webkit-mask-image: url(${Imagedata});-webkit-mask-size: ${videoEl
     data = SuperDanmakuCanvasElement.toDataURL("image/png");
     mask(data);
   }
-  await loadBodyPix();
+  if (net) return BodynetPix;
+  net = await bodyPix.load();
   setInterval(() => {
-    drawCanvas();
+    if (ismask.checked) {
+      drawCanvas();
+    }
   }, 100);
-  loadBodyPix();
 }
 
 function LIST_COMMENT() {
@@ -664,6 +665,12 @@ function PREPARE(observe) {
     console.log(this.checked);
     CommentLoadingScreenWrapper.style.display = this.checked ? "block" : "none";
   });
+  document.getElementById("ismask").addEventListener("change", function () {
+    if (!this.checked) {
+      zouryouCanvasElement.style.setProperty("-webkit-mask-image", ``);
+    }
+  });
+
   document.getElementById("iscanvas").addEventListener("change", function () {
     niconiComments.video = this.checked ? videoElement : null;
     pipVideoElement.style.display = this.checked ? "block" : "none";
