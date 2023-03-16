@@ -371,7 +371,7 @@ display:block;-webkit-mask-image: url(${Imagedata});-webkit-mask-size: ${videoEl
   function segmentPerson(img) {
     const option = {
       flipHorizontal: false,
-      internalResolution: 0.4,
+      internalResolution: "high",
       segmentationThreshold: 0.7,
       maxDetections: 5,
       scoreThreshold: 0.3,
@@ -397,7 +397,7 @@ display:block;-webkit-mask-image: url(${Imagedata});-webkit-mask-size: ${videoEl
 
   setInterval(() => {
     drawCanvas();
-  }, 100);
+  }, 50);
   loadBodyPix();
 }
 
