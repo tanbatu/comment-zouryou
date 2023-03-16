@@ -239,7 +239,7 @@ async function LOADCOMMENT() {
   PLAYCOMMENT();
 }
 
-let niconiComments;
+let niconiComments, comment_list_active;
 
 function PLAYCOMMENT() {
   let draw;
@@ -307,14 +307,16 @@ function PLAYCOMMENT() {
     .getElementById("comment_list_open")
     .addEventListener("click", function () {
       comment_list.style.visibility = "visible";
+      comment_list_active = true;
     });
   document
     .getElementById("comment_list_exit")
     .addEventListener("click", function () {
       comment_list.style.visibility = "hidden";
+      comment_list_active = false;
     });
   LIST_COMMENT();
-  DANMAKU_SUPER();
+  void DANMAKU_SUPER();
   document
     .getElementsByClassName(
       "ActionButton ControllerButton CommentOnOffButton"
@@ -352,7 +354,7 @@ function PLAYCOMMENT() {
   setTimeout(setup, 1000);
 }
 
-function DANMAKU_SUPER() {
+async function DANMAKU_SUPER() {
   let ctx = SuperDanmakuCanvasElement.getContext("2d");
   let net;
   async function loadBodyPix() {
@@ -383,10 +385,10 @@ display:block;-webkit-mask-image: url(${Imagedata});-webkit-mask-size: ${videoEl
     return net.segmentPerson(img, option);
   }
   // 绘制帧数据到canvas
-
+  let lastCurrentTime = -1;
   async function drawCanvas() {
-    if (!net) return;
-
+    if (!net || videoElement.currentTime === lastCurrentTime) return;
+    lastCurrentTime = videoElement.currentTime;
     const segmentation = await segmentPerson(videoElement);
 
     const colorMask = bodyPix.toMask(segmentation, false);
@@ -394,10 +396,10 @@ display:block;-webkit-mask-image: url(${Imagedata});-webkit-mask-size: ${videoEl
     data = SuperDanmakuCanvasElement.toDataURL("image/png");
     mask(data);
   }
-
+  await loadBodyPix();
   setInterval(() => {
     drawCanvas();
-  }, 50);
+  }, 100);
   loadBodyPix();
 }
 
@@ -409,6 +411,7 @@ function LIST_COMMENT() {
   });
   console.log(COMMENT[0].comments);
   setInterval(() => {
+    if (!comment_list_active) return;
     let passIndex = COMMENT[0].comments.findIndex(function (element) {
       return element.vposMs > Math.floor(videoElement.currentTime * 1000);
     });
