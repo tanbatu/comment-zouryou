@@ -15,7 +15,8 @@ let CommentRenderer,
   OLD_DATE,
   OLD_TIME,
   DRAW_,
-  net;
+  net,
+  firstaccess;
 let COMMENT = [];
 let CommentLimit = 40;
 
@@ -356,9 +357,10 @@ function PLAYCOMMENT() {
 }
 
 async function DANMAKU_SUPER() {
+  videoElement.setAttribute("width", "640");
+  videoElement.setAttribute("height", "360");
   let ismask = document.getElementById("ismask");
   let ctx = SuperDanmakuCanvasElement.getContext("2d");
-
   function mask(Imagedata) {
     zouryouCanvasElement.style.setProperty(
       "-webkit-mask-image",
@@ -520,11 +522,11 @@ function PREPARE(observe) {
     "SuperDanmakuCanvasElement"
   );
   videoElement = document.getElementById("MainVideoPlayer").children[0];
-  videoElement.width = 640;
-  videoElement.height = 360;
-  SuperDanmakuCanvasElement.width = videoElement.width;
+  videoElement.setAttribute("width", 640);
+  videoElement.setAttribute("height", 360);
 
-  SuperDanmakuCanvasElement.height = videoElement.height;
+  SuperDanmakuCanvasElement.width = 640;
+  SuperDanmakuCanvasElement.height = 360;
 
   console.log(videoElement);
   pipVideoElement = document.getElementById("pipVideoElement");
@@ -540,8 +542,7 @@ function PREPARE(observe) {
   link = document.getElementById("loaded");
   CustomVideoContainer.style.display = "none";
   CustomVideoContainer.style.zIndex = "1";
-  zouryouCanvasElement.style =
-    "position:absolute;top:0;left:0;width:100%;height:100%;z-index:0;display:block";
+  zouryouCanvasElement.style = `position:absolute;top:0;left:0;width:100%;height:100%;z-index:0;display:block;-webkit-mask-position: center;`;
   SuperDanmakuCanvasElement.style =
     "position:absolute;top:0;left:0;width:100%;height:100%;z-index:1;display:block;opacity:0;";
   pipVideoElement.style =
@@ -566,7 +567,10 @@ function PREPARE(observe) {
 
   //NG取得とか
   let ng_storage = localStorage.getItem("ng_storage");
-  let ngarray, SETTING_NG_LIST_COMMENT, SETTING_NG_LIST_COMMAND;
+  let ngarray,
+    SETTING_NG_LIST_COMMENT,
+    SETTING_NG_LIST_COMMAND,
+    SETTING_NG_LIST_ISEASY;
 
   function NG_DELETE(type, i) {
     ngarray[type].splice(i, 1);
@@ -580,6 +584,7 @@ function PREPARE(observe) {
     ng_storage = localStorage.getItem("ng_storage");
     NG_LIST_COMMAND = [];
     NG_LIST_COMMENT = [];
+    SETTING_NG_LIST_ISEASY = document.getElementById("iseasy");
     SETTING_NG_LIST_COMMENT = document.getElementById("ng_comment");
     SETTING_NG_LIST_COMMAND = document.getElementById("ng_command");
     loading_text = document.getElementById("loading_text");
@@ -590,7 +595,7 @@ function PREPARE(observe) {
     if (ng_storage == null || ng_storage == "[null]") {
       localStorage.setItem(
         "ng_storage",
-        JSON.stringify({ command: [], comment: [] })
+        JSON.stringify({ command: [], comment: [], easy: false })
       );
     } else {
       ngarray = JSON.parse(ng_storage);
@@ -617,6 +622,7 @@ function PREPARE(observe) {
           NG_DELETE("command", i);
         };
       }
+      SETTING_NG_LIST_ISEASY.checked = ngarray.easy;
     }
   }
 
@@ -632,7 +638,6 @@ function PREPARE(observe) {
       ng_element();
     }, 100);
   };
-
   document.getElementById("form_comment").onclick = () => {
     ng_storage = localStorage.getItem("ng_storage");
     ngarray = JSON.parse(ng_storage);
@@ -640,6 +645,15 @@ function PREPARE(observe) {
     ngarray.comment.push(ng_add);
     localStorage.setItem("ng_storage", JSON.stringify(ngarray));
 
+    setTimeout(() => {
+      ng_element();
+    }, 100);
+  };
+  document.getElementById("iseasy").onclick = () => {
+    ng_storage = localStorage.getItem("ng_storage");
+    ngarray = JSON.parse(ng_storage);
+    ngarray.easy = !ngarray.easy;
+    localStorage.setItem("ng_storage", JSON.stringify(ngarray));
     setTimeout(() => {
       ng_element();
     }, 100);
