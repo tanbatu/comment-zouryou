@@ -564,6 +564,39 @@ function PREPARE(observe) {
   );
   OLD_DATE.min = "2007-03-03";
   OLD_DATE.max = new Date().getFullYear() + "-12-31";
+  //コメント設定
+  const val_stroke = document.getElementsByClassName("range_val");
+  const bar_stroke = document.getElementsByClassName("range_bar");
+  let get_zouryou_config = localStorage.getItem("zouryou_config");
+  let zouryou_config;
+  let comment_size, stroke_opacity, comment_opacity, fps;
+  function CONFIG() {
+    get_zouryou_config = localStorage.getItem("zouryou_config");
+    if (get_zouryou_config == null || get_zouryou_config == "[null]") {
+      localStorage.setItem(
+        "zouryou_config",
+        JSON.stringify({
+          bar_textsize: 100,
+          bar_stroke: 0.35,
+          bar_alpha: 100,
+          bar_fps: 30,
+        })
+      );
+    } else {
+      zouryou_config = JSON.parse(get_zouryou_config);
+      comment_size = document.getElementById("bar_textsize");
+      stroke_opacity = document.getElementById("bar_stroke");
+      comment_opacity = document.getElementById("bar_alpha");
+      fps = document.getElementById("bar_fps");
+      comment_size.value = zouryou_config.bar_textsize;
+      stroke_opacity.value = zouryou_config.bar_stroke;
+      comment_opacity.value = zouryou_config.bar_alpha;
+      fps.value = zouryou_config.bar_fps;
+      for (let i = 0; i < val_stroke.length; i++) {
+        val_stroke[i].innerText = bar_stroke[i].value;
+      }
+    }
+  }
 
   //NG取得とか
   let ng_storage = localStorage.getItem("ng_storage");
@@ -626,7 +659,10 @@ function PREPARE(observe) {
     }
   }
 
-  if (!observe) ng_element();
+  if (!observe) {
+    ng_element();
+    CONFIG();
+  }
   document.getElementById("form_command").onclick = () => {
     ng_storage = localStorage.getItem("ng_storage");
     ngarray = JSON.parse(ng_storage);
@@ -659,17 +695,21 @@ function PREPARE(observe) {
     }, 100);
   };
 
-  const val_stroke = document.getElementsByClassName("range_val");
-  const bar_stroke = document.getElementsByClassName("range_bar");
   for (let i = 0; i < val_stroke.length; i++) {
     bar_stroke[i].addEventListener(
       "input",
       function (e) {
         val_stroke[i].innerText = e.target.value;
-
         if (this.id == "bar_alpha") {
           zouryouCanvasElement.style.opacity = e.target.value * 0.01;
         }
+        get_zouryou_config = localStorage.getItem("zouryou_config");
+        zouryou_config = JSON.parse(get_zouryou_config);
+        zouryou_config[bar_stroke[i].id] = e.target.value;
+        localStorage.setItem("zouryou_config", JSON.stringify(zouryou_config));
+        setTimeout(() => {
+          ng_element();
+        }, 100);
       },
       false
     );
