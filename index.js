@@ -278,7 +278,6 @@ function PLAYCOMMENT() {
         contextStrokeOpacity: Number(
           document.getElementById("bar_stroke").value
         ),
-
         contextLineWidth: 3.5,
       }),
       format: "v1",
@@ -721,7 +720,9 @@ function PREPARE(observe) {
   });
   document.getElementById("ismask").addEventListener("change", function () {
     if (!this.checked) {
-      zouryouCanvasElement.style.setProperty("-webkit-mask-image", ``);
+      setTimeout(() => {
+        zouryouCanvasElement.style.setProperty("-webkit-mask-image", ``);
+      }, 100);
     }
   });
 
