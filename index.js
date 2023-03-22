@@ -374,7 +374,9 @@ async function DANMAKU_SUPER() {
     );
     zouryouCanvasElement.style.setProperty(
       "-webkit-mask-position-x",
-      `${640 - 360 * aspect}px `
+      `${
+        (videoElement.clientWidth - videoElement.clientHeight * aspect) / 2
+      }px `
     );
   }
   function segmentPerson(img) {
