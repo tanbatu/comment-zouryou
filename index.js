@@ -16,7 +16,8 @@ let CommentRenderer,
   OLD_TIME,
   DRAW_,
   net,
-  firstaccess;
+  firstaccess,
+  aspect;
 let COMMENT = [];
 let CommentLimit = 40;
 
@@ -356,8 +357,10 @@ function PLAYCOMMENT() {
 }
 
 async function DANMAKU_SUPER() {
-  videoElement.setAttribute("width", "640");
-  videoElement.setAttribute("height", "360");
+  aspect = Number(videoElement.videoWidth) / Number(videoElement.videoHeight);
+  console.log(aspect);
+  videoElement.setAttribute("width", 360 * aspect);
+  videoElement.setAttribute("height", 360);
   let ismask = document.getElementById("ismask");
   let ctx = SuperDanmakuCanvasElement.getContext("2d");
   function mask(Imagedata) {
@@ -368,6 +371,10 @@ async function DANMAKU_SUPER() {
     zouryouCanvasElement.style.setProperty(
       "-webkit-mask-size",
       `${videoElement.clientWidth}px ${videoElement.clientHeight}px `
+    );
+    zouryouCanvasElement.style.setProperty(
+      "-webkit-mask-position-x",
+      `${640 - 360 * aspect}px `
     );
   }
   function segmentPerson(img) {
@@ -389,10 +396,12 @@ async function DANMAKU_SUPER() {
   async function drawCanvas() {
     if (!net || videoElement.currentTime === lastCurrentTime) return;
     lastCurrentTime = videoElement.currentTime;
+    ctx.fillStyle = "rgb(0, 0, 0)";
+    ctx.fillRect(360 * aspect, 0, 640 - 360 * aspect, 360);
     const segmentation = await segmentPerson(videoElement);
-
     const colorMask = bodyPix.toMask(segmentation, false);
     ctx.putImageData(colorMask, 0, 0);
+
     data = SuperDanmakuCanvasElement.toDataURL("image/png");
     mask(data);
   }
@@ -521,8 +530,6 @@ function PREPARE(observe) {
     "SuperDanmakuCanvasElement"
   );
   videoElement = document.getElementById("MainVideoPlayer").children[0];
-  videoElement.setAttribute("width", 640);
-  videoElement.setAttribute("height", 360);
 
   SuperDanmakuCanvasElement.width = 640;
   SuperDanmakuCanvasElement.height = 360;
@@ -541,7 +548,7 @@ function PREPARE(observe) {
   link = document.getElementById("loaded");
   CustomVideoContainer.style.display = "none";
   CustomVideoContainer.style.zIndex = "1";
-  zouryouCanvasElement.style = `position:absolute;top:0;left:0;width:100%;height:100%;z-index:0;display:block;-webkit-mask-position: center;`;
+  zouryouCanvasElement.style = `position:absolute;top:0;left:0;width:100%;height:100%;z-index:0;display:block;`;
   SuperDanmakuCanvasElement.style =
     "position:absolute;top:0;left:0;width:100%;height:100%;z-index:1;display:block;opacity:0;";
   pipVideoElement.style =
