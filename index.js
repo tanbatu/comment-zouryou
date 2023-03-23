@@ -282,7 +282,6 @@ function PLAYCOMMENT() {
         contextLineWidth: 3.5,
       }),
       format: "v1",
-      useLegacy: document.getElementById("checkbox3").checked == false,
     });
     loading.style.display = "none";
     CustomVideoContainer.style.display = "block";
@@ -422,32 +421,29 @@ function LIST_COMMENT() {
     if (a.vposMs > b.vposMs) return 1;
     return 0;
   });
-  let nicorufilter_comment = COMMENT[0].comments.filter(function (value) {
-    return value.nicoruCount > 2;
-  });
-  console.log(COMMENT[0].comments);
 
+  console.log(COMMENT[0].comments);
+  let now_comment_pos = document.getElementById("now_comment_pos");
   setInterval(() => {
     if (!comment_list_active) return;
 
-    let passIndex = nicorufilter_comment.findIndex(function (element) {
+    let passIndex = COMMENT[0].comments.findIndex(function (element) {
       return element.vposMs > Math.floor(videoElement.currentTime * 1000);
     });
-
+    now_comment_pos.innerText = `現在のコメント位置${passIndex}/${COMMENT[0].comments.length}`;
     console.log(passIndex);
     document.getElementById("comment_list_comments").innerHTML = "";
     for (let i = 0; i < 30; i++) {
-      let body = nicorufilter_comment[passIndex - i]?.body;
-      let nicoru = nicorufilter_comment[passIndex - i]?.nicoruCount;
+      let body = COMMENT[0].comments[passIndex - i]?.body;
+      let nicoru = COMMENT[0].comments[passIndex - i]?.nicoruCount;
       if (body == undefined) body = "";
       let commentElement = document.createElement("div");
       commentElement.className = "list_comment";
       commentElement.innerHTML = `<p style="background-color:rgba(243, 186, 0, ${
-        nicoru / 50
+        nicoru / 10
       })">${body}</p>`;
       document.getElementById("comment_list_comments").prepend(commentElement);
     }
-    console.log();
   }, 50);
 }
 
@@ -751,7 +747,6 @@ function PREPARE(observe) {
   document.getElementById("isdebug").addEventListener("change", function () {
     niconiComments.showCommentCount =
       document.getElementById("isdebug").checked;
-    niconiComments.showFPS = document.getElementById("isdebug").checked;
   });
   document.getElementById("zenkomebutton").onclick = () => {
     let num = document.getElementById("load_num").value;

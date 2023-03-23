@@ -355,11 +355,10 @@
 
         #bottom {
             margin: 0px 3px;
-            height: 90%;
+            height: 100%;
             overflow: hidden;
             width: 100%;
             position: absolute;
-            bottom: 30px;
         }
     </style>
     <div id="allcommentsetting" style="
@@ -449,36 +448,38 @@
                         <input type="checkbox" id="iseasy" /><label for="iseasy">かんたんコメントを表示しない</label>
                     </div>
                 </div>
-                <button id="comment_list_open">コメントリスト</button>
+
                 <div style="padding-top:10px;">
                     <h3>描画設定</h3>
-                    <div style="padding-top:6px;">
-                        <b>コメントの大きさ</b><small class="range_val" id="val_textsize">100</small><br>
-                        50 <input class="range_bar" id="bar_textsize" type="range" name="speed" step="5" value="100"
-                            min="50" max="100">
-                        100
+                    <div style="display:flex">
+                        <div style="padding-top:6px;width: 50%;">
+                            <b>コメントの大きさ</b><small class="range_val" id="val_textsize">100</small><br>
+                            50 <input class="range_bar" id="bar_textsize" type="range" name="speed" step="5" value="100"
+                                min="50" max="100">
+                            100
+                        </div>
+                        <div style="padding-top:6px;width: 45%;position: absolute;right: 20px;">
+                            <b>縁取りの濃さ</b><small class="range_val" id="val_stroke">0.35</small><br>
+                            0 <input class="range_bar" id="bar_stroke" type="range" name="speed" step="0.05"
+                                value="0.35" min="0" max="1.0">
+                            1.0
+                        </div>
                     </div>
-                    <div style="padding-top:6px;">
-                        <b>縁取りの濃さ</b><small class="range_val" id="val_stroke">0.35</small><br>
-                        0 <input class="range_bar" id="bar_stroke" type="range" name="speed" step="0.05" value="0.35"
-                            min="0" max="1.0">
-                        1.0
+                    <div style="display:flex">
+                        <div style="padding-top:6px;width: 50%;">
+                            <b>不透明度</b><small class="range_val" id="val_alpha">100</small><br>
+                            0 <input class="range_bar" id="bar_alpha" type="range" name="speed" step="5" value="100"
+                                min="0" max="100">
+                            100
+                        </div>
+                        <div style="padding-top:6px;width: 45%;position: absolute;right: 20px;">
+                            <b>フレームレート</b><small class="range_val" id="val_alpha">30</small><br>
+                            0 <input class="range_bar" id="bar_fps" type="range" name="speed" step="1" value="30"
+                                min="1" max="60">
+                            60
+                        </div>
                     </div>
-                    <div style="padding-top:6px;">
-                        <b>不透明度</b><small class="range_val" id="val_alpha">100</small><br>
-                        0 <input class="range_bar" id="bar_alpha" type="range" name="speed" step="5" value="100" min="0"
-                            max="100">
-                        100
-                    </div>
-                    <div style="padding-top:6px;">
-                        <b>フレームレート</b><small class="range_val" id="val_alpha">30</small><br>
-                        0 <input class="range_bar" id="bar_fps" type="range" name="speed" step="1" value="30" min="1"
-                            max="60">
-                        60
-                    </div>
-                    <div style="margin-top:6px;">
-                        <input type="checkbox" id="checkbox3" /><label for="checkbox3">フォントをメイリオにする</label>
-                    </div>
+
                     <div style="margin-top:6px;">
                         <input type="checkbox" id="checkbox4" /><label for="checkbox4">コメントアートが崩れないようにする</label>
                     </div>
@@ -495,9 +496,12 @@
                         <input type="checkbox" id="ismask" /><label for="ismask">人物避け(試験的)</label>
                     </div>
                     <div style="margin-top:6px;">
-                        <input type="checkbox" id="isdebug" /><label for="isdebug">FPSとコメント描画数を表示</label>
+                        <input type="checkbox" id="isdebug" /><label for="isdebug">コメント描画数を表示</label>
                     </div>
-
+                    <button style="margin-top:6px;background: white;
+                                    padding: 3px;
+                                    border-color: gray;
+                                " id="comment_list_open">コメントリストを開く</button>
                 </div>
             </div>
         </div>
@@ -515,7 +519,23 @@
         </a>
         <div id="comment_list"
             style="position:absolute;top:0;left:0;z-index:500;background-color: white;width: 100%;height: 100%;visibility: hidden;">
-            <button id="comment_list_exit">閉じる</button>
+            <div id="comment_list_header"
+                style="display:flex;position: absolute;top:0;left:0;width:100%;height:40px;z-index:5;background-color: rgb(255, 255, 255);padding:2px">
+                <small id="now_comment_pos">
+                    現在のコメント位置/
+                </small>
+
+                <div style="position:absolute;width:18px;height:90%;right:20px;top:5px;z-index:1"
+                    id="comment_list_exit">
+                    <svg viewBox="0 0 100 100" fill-rule="evenodd" clip-rule="evenodd" stroke-linejoin="round"
+                        stroke-miterlimit="1.4">
+                        <path fill="#6b6b6b"
+                            d="M50 32.8L81.6 1.2a4.1 4.1 0 015.8 0l11.4 11.4a4.1 4.1 0 010 5.9L67.2 50l31.6 31.6a4.1 4.1 0 010 5.8L87.4 98.8a4.1 4.1 0 01-5.9 0L50 67.2 18.4 98.8a4.1 4.1 0 01-5.8 0L1.2 87.4a4.1 4.1 0 010-5.9L32.8 50 1.2 18.4a4.1 4.1 0 010-5.8L12.6 1.2a4.1 4.1 0 015.9 0L50 32.8z">
+                        </path>
+                    </svg>
+                </div>
+            </div>
+
             <div id="bottom">
                 <div id="comment_list_comments" style="position:absolute;bottom:0px;width:100%">
 
