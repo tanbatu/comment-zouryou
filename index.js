@@ -382,7 +382,9 @@ async function DANMAKU_SUPER() {
     const option = {
       flipHorizontal: false,
       internalResolution: "high",
-      segmentationThreshold: 0.7,
+      segmentationThreshold: Number(
+        document.getElementById("bar_segment").value
+      ),
       maxDetections: 5,
       scoreThreshold: 0.3,
       nmsRadius: 20,
