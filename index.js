@@ -581,7 +581,7 @@ function PREPARE(observe) {
   const bar_stroke = document.getElementsByClassName("range_bar");
   let get_zouryou_config = localStorage.getItem("zouryou_config");
   let zouryou_config;
-  let comment_size, stroke_opacity, comment_opacity, fps;
+  let comment_size, stroke_opacity, comment_opacity, fps, pip, keepCA;
   function CONFIG() {
     get_zouryou_config = localStorage.getItem("zouryou_config");
     if (get_zouryou_config == null || get_zouryou_config == "[null]") {
@@ -592,6 +592,8 @@ function PREPARE(observe) {
           bar_stroke: 0.35,
           bar_alpha: 100,
           bar_fps: 30,
+          keepCA: false,
+          pip: false,
         })
       );
     } else {
@@ -600,9 +602,13 @@ function PREPARE(observe) {
       stroke_opacity = document.getElementById("bar_stroke");
       comment_opacity = document.getElementById("bar_alpha");
       fps = document.getElementById("bar_fps");
+      pip = document.getElementById("iscanvas");
+      keepCA = document.getElementById("checkbox4");
       comment_size.value = zouryou_config.bar_textsize;
       stroke_opacity.value = zouryou_config.bar_stroke;
       comment_opacity.value = zouryou_config.bar_alpha;
+      pip.checked = zouryou_config.pip;
+      keepCA.checked = zouryou_config.keepCA;
       fps.value = zouryou_config.bar_fps;
       for (let i = 0; i < val_stroke.length; i++) {
         val_stroke[i].innerText = bar_stroke[i].value;
@@ -706,6 +712,18 @@ function PREPARE(observe) {
       ng_element();
     }, 100);
   };
+  document.getElementById("checkbox4").onclick = () => {
+    get_zouryou_config = localStorage.getItem("zouryou_config");
+    zouryou_config = JSON.parse(get_zouryou_config);
+    zouryou_config.keepCA = !zouryou_config.keepCA;
+    localStorage.setItem("zouryou_config", JSON.stringify(zouryou_config));
+  };
+  document.getElementById("iscanvas").onclick = () => {
+    get_zouryou_config = localStorage.getItem("zouryou_config");
+    zouryou_config = JSON.parse(get_zouryou_config);
+    zouryou_config.pip = !zouryou_config.pip;
+    localStorage.setItem("zouryou_config", JSON.stringify(zouryou_config));
+  };
 
   for (let i = 0; i < val_stroke.length; i++) {
     bar_stroke[i].addEventListener(
@@ -719,9 +737,6 @@ function PREPARE(observe) {
         zouryou_config = JSON.parse(get_zouryou_config);
         zouryou_config[bar_stroke[i].id] = e.target.value;
         localStorage.setItem("zouryou_config", JSON.stringify(zouryou_config));
-        setTimeout(() => {
-          ng_element();
-        }, 100);
       },
       false
     );
