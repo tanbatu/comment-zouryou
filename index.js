@@ -265,7 +265,8 @@ function PLAYCOMMENT() {
     link.download = apiData.video.id + ".json"; // ファイル名
 
     videoElement = document.getElementById("MainVideoPlayer").children[0];
-
+    aspect = Number(videoElement.videoWidth) / Number(videoElement.videoHeight);
+    console.log(aspect);
     niconiComments = new NiconiComments(zouryouCanvasElement, COMMENT, {
       video: document.getElementById("iscanvas").checked
         ? videoElement
@@ -302,6 +303,8 @@ function PLAYCOMMENT() {
     pipVideoElement.srcObject = zouryouCanvasElement.captureStream(60);
     pipVideoElement.muted = true;
     pipVideoElement.play();
+
+    void DANMAKU_SUPER();
   }
   const comment_list = document.getElementById("comment_list");
   document
@@ -317,7 +320,7 @@ function PLAYCOMMENT() {
       comment_list_active = false;
     });
   LIST_COMMENT();
-  void DANMAKU_SUPER();
+
   document
     .getElementsByClassName(
       "ActionButton ControllerButton CommentOnOffButton"
@@ -356,7 +359,7 @@ function PLAYCOMMENT() {
 }
 
 async function DANMAKU_SUPER() {
-  aspect = Number(videoElement.videoWidth) / Number(videoElement.videoHeight);
+  console.log(videoElement.videoWidth);
   console.log(aspect);
   videoElement.setAttribute("width", 360 * aspect);
   videoElement.setAttribute("height", 360);
