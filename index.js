@@ -213,7 +213,7 @@ async function LOADCOMMENT() {
       }%,rgba(0, 0, 0, .9) ${
         ((fetchedThreadCount + j) / totalThreadCount) * 100
       }%,rgba(0, 0, 0, .9) 100%)`;
-      if (CommentLimit > 59) {
+      if (CommentLimit > 21) {
         await sleep(1000);
       }
     }
@@ -365,7 +365,7 @@ function PLAYCOMMENT() {
   observer.observe(document, { childList: true, subtree: true });
   setTimeout(setup, 1000);
 }
-
+let lastCurrentTime = -1;
 async function DANMAKU_SUPER() {
   videoElement.setAttribute("width", 360 * aspect);
   videoElement.setAttribute("height", 360);
@@ -404,7 +404,7 @@ async function DANMAKU_SUPER() {
     return net.segmentPerson(img, option);
   }
   // 绘制帧数据到canvas
-  let lastCurrentTime = -1;
+
   async function drawCanvas() {
     if (!net || videoElement.currentTime === lastCurrentTime) return;
     lastCurrentTime = videoElement.currentTime;
@@ -435,6 +435,8 @@ function LIST_COMMENT() {
 
   let now_comment_pos = document.getElementById("now_comment_pos");
   setInterval(() => {
+    if (videoElement.currentTime === lastCurrentTime) return;
+    lastCurrentTime = videoElement.currentTime;
     if (!comment_list_active) return;
 
     let passIndex = COMMENT[0].comments.findIndex(function (element) {
@@ -450,7 +452,7 @@ function LIST_COMMENT() {
       commentElement.className = "list_comment";
       commentElement.innerHTML = `<div style="padding:0px 2px;display:flex;background-color:rgba(243, 186, 0, ${
         nicoru / 10
-      })"><p style="width:95%;">${body}</p><p style="margin:0 auto;width:5%;">${nicoru}</p></div>`;
+      })"><p style="width:95%;">${body}</p><p style="padding-top:4px;width:5%;">${nicoru}</p></div>`;
       document.getElementById("comment_list_comments").prepend(commentElement);
     }
   }, 50);
