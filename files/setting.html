@@ -354,7 +354,7 @@
 
 
         #bottom {
-            margin: 0px 3px;
+            margin: 0px 2px;
             height: 100%;
             overflow: hidden;
             width: 100%;
@@ -450,7 +450,18 @@
                 </div>
 
                 <div style="padding-top:10px;">
-                    <h3>描画設定</h3>
+                    <div style="display:flex">
+                        <h3>描画設定</h3>
+                        <button style="    margin-top: 0px;
+                                            background: white;
+                                            padding: 3px;
+                                            margin-left: 5px;
+                                            border-color: gray;
+                                            height: 16px;
+                                            font-size: 10px; " id="reload_niconicomments" disabled>リロード
+                        </button>
+                    </div>
+
                     <div style="display:flex">
                         <div style="padding-top:6px;width: 50%;">
                             <b>コメントの大きさ</b><small class="range_val" id="val_textsize">100</small><br>
@@ -486,6 +497,7 @@
                     <div style="margin-top:6px;">
                         <input type="checkbox" id="iscanvas" /><label for="iscanvas">キャンバスに動画を描画する(pip用)</label>
                     </div>
+
                 </div>
                 <div style="padding-top:10px;">
                     <h3>その他</h3>
@@ -497,7 +509,7 @@
                     </div>
                     <div style="padding-top:6px;padding-left:10px;width: 50%;">
                         <b>許容値</b><small class="range_val" id="val_alpha">0.7</small><br>
-                        0 <input class="range_bar" id="bar_segment" type="range" name="speed" step="0.1" value="0.7"
+                        0 <input class="range_bar" id="bar_segment" type="range" name="speed" step="0.05" value="0.7"
                             min="0" max="1.0">
                         1.0
                     </div>

@@ -267,23 +267,31 @@ function PLAYCOMMENT() {
     videoElement = document.getElementById("MainVideoPlayer").children[0];
     aspect = Number(videoElement.videoWidth) / Number(videoElement.videoHeight);
     console.log(aspect);
-    niconiComments = new NiconiComments(zouryouCanvasElement, COMMENT, {
-      video: document.getElementById("iscanvas").checked
-        ? videoElement
-        : undefined,
-      enableLegacyPiP: true,
-      scale: document.getElementById("bar_textsize").value * 0.01,
-      keepCA: document.getElementById("checkbox4").checked,
-      showCommentCount: document.getElementById("isdebug").checked,
-      showFPS: document.getElementById("isdebug").checked,
-      config: (Config = {
-        contextStrokeOpacity: Number(
-          document.getElementById("bar_stroke").value
-        ),
-        contextLineWidth: 3.5,
-      }),
-      format: "v1",
-    });
+    function load_NiconiComments() {
+      niconiComments = new NiconiComments(zouryouCanvasElement, COMMENT, {
+        video: document.getElementById("iscanvas").checked
+          ? videoElement
+          : undefined,
+        enableLegacyPiP: true,
+        scale: document.getElementById("bar_textsize").value * 0.01,
+        keepCA: document.getElementById("checkbox4").checked,
+        showCommentCount: document.getElementById("isdebug").checked,
+        showFPS: document.getElementById("isdebug").checked,
+        config: (Config = {
+          contextStrokeOpacity: Number(
+            document.getElementById("bar_stroke").value
+          ),
+          contextLineWidth: 3.5,
+        }),
+        format: "v1",
+      });
+    }
+    load_NiconiComments();
+    document.getElementById("reload_niconicomments").disabled = false;
+
+    document.getElementById("reload_niconicomments").onclick = () => {
+      load_NiconiComments();
+    };
     loading.style.display = "none";
     CustomVideoContainer.style.display = "block";
     console.log(niconiComments);
@@ -348,6 +356,7 @@ function PLAYCOMMENT() {
       document.getElementById("loaded").style.visibility = "hidden";
       document.getElementById("zenkomebutton").disabled = false;
       pipVideoElement.style.display = "none";
+      document.getElementById("reload_niconicomments").disabled = true;
       document.getElementsByClassName("loadbutton_text")[0].innerText =
         "読み込み開始！";
       href = location.href;
