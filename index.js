@@ -174,7 +174,6 @@ async function LOADCOMMENT() {
           continue;
         }
         for (const comment of comments_tmp) {
-          console.log(comment.chat.mail);
           //
           comments.push({
             body: comment.chat.content,
@@ -368,8 +367,6 @@ function PLAYCOMMENT() {
 }
 
 async function DANMAKU_SUPER() {
-  console.log(videoElement.videoWidth);
-  console.log(aspect);
   videoElement.setAttribute("width", 360 * aspect);
   videoElement.setAttribute("height", 360);
   let ismask = document.getElementById("ismask");
@@ -436,7 +433,6 @@ function LIST_COMMENT() {
     return 0;
   });
 
-  console.log(COMMENT[0].comments);
   let now_comment_pos = document.getElementById("now_comment_pos");
   setInterval(() => {
     if (!comment_list_active) return;
@@ -445,7 +441,6 @@ function LIST_COMMENT() {
       return element.vposMs > Math.floor(videoElement.currentTime * 1000);
     });
     now_comment_pos.innerText = `現在のコメント位置${passIndex}/${COMMENT[0].comments.length}`;
-    console.log(passIndex);
     document.getElementById("comment_list_comments").innerHTML = "";
     for (let i = 0; i < 30; i++) {
       let body = COMMENT[0].comments[passIndex - i]?.body;
@@ -453,9 +448,9 @@ function LIST_COMMENT() {
       if (body == undefined) body = "";
       let commentElement = document.createElement("div");
       commentElement.className = "list_comment";
-      commentElement.innerHTML = `<p style="background-color:rgba(243, 186, 0, ${
+      commentElement.innerHTML = `<div style="padding:0px 2px;display:flex;background-color:rgba(243, 186, 0, ${
         nicoru / 10
-      })">${body}</p>`;
+      })"><p style="width:95%;">${body}</p><p style="margin:0 auto;width:5%;">${nicoru}</p></div>`;
       document.getElementById("comment_list_comments").prepend(commentElement);
     }
   }, 50);
@@ -757,7 +752,6 @@ function PREPARE(observe) {
   }
 
   document.getElementById("islogger").addEventListener("change", function () {
-    console.log(this.checked);
     CommentLoadingScreenWrapper.style.display = this.checked ? "block" : "none";
   });
   document.getElementById("ismask").addEventListener("change", function () {
