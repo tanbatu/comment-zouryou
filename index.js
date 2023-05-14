@@ -254,7 +254,11 @@ async function LOADCOMMENT() {
       }%,rgba(0, 0, 0, .9) ${
         ((fetchedThreadCount + j) / totalThreadCount) * 100
       }%,rgba(0, 0, 0, .9) 100%)`;
-      if (CommentLimit > 20) {
+      let LimitRate = 20;
+      if (NG_LIST_COMMAND.includes("speedmode")) {
+        LimitRate = 1000;
+      }
+      if (CommentLimit > LimitRate) {
         await sleep(1000);
       }
     }
@@ -888,3 +892,4 @@ const start = setInterval(() => {
     clearInterval(start);
   }
 }, 50);
+console.log("✨コメント増量 v4.1\nCopyright (c) 2022 tanbatu.");
