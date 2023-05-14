@@ -82,13 +82,14 @@ async function LOADCOMMENT() {
       }
     }
   };
+  let threadKey = nvComment.threadKey;
   for (const i in nvComment.params.targets) {
     const thread = nvComment.params.targets[i];
     if (document.getElementById("iseasy").checked && thread.fork == "easy") {
       continue;
     }
-    const baseData = {
-      threadKey: nvComment.threadKey,
+    let baseData = {
+      threadKey: threadKey,
       params: {
         language: nvComment.params.language,
         targets: [thread],
@@ -115,6 +116,46 @@ async function LOADCOMMENT() {
           }),
         });
         const res = await req.json();
+        if (res?.meta?.errorCode === "TOO_MANY_REQUESTS") {
+          for (let i = 0; i < 60; i++) {
+            logger(
+              `[${
+                fetchedThreadCount + j
+              }/${totalThreadCount}]: API呼び出しの回数制限を超えました。しばらくお待ち下さい。\n
+              あと${60 - i}秒`
+            );
+            await sleep(1000);
+          }
+          j--;
+          continue;
+        }
+        if (res?.meta?.errorCode === "EXPIRED_TOKEN") {
+          logger(
+            `[${
+              fetchedThreadCount + j
+            }/${totalThreadCount}]:threadKeyを新たに取得しています…`
+          );
+          await fetch(
+            "https://nvapi.nicovideo.jp/v1/comment/keys/thread?videoId=" +
+              apiData.video.id,
+            {
+              headers: {
+                "X-Frontend-Id": "6",
+                "X-Frontend-Version": "0",
+                "Content-Type": "application/json",
+              },
+              credentials: "include",
+            }
+          )
+            .then((r) => r.json())
+            .then((j) => {
+              console.log(j.data.threadKey);
+              threadKey = j.data.threadKey;
+              baseData.threadKey = j.data.threadKey;
+            });
+          j--;
+          continue;
+        }
         if (res?.meta?.errorCode === "INVALID_TOKEN") {
           logger("旧コメントAPIに切り替えています...");
           isLoggedIn = false;
@@ -213,7 +254,7 @@ async function LOADCOMMENT() {
       }%,rgba(0, 0, 0, .9) ${
         ((fetchedThreadCount + j) / totalThreadCount) * 100
       }%,rgba(0, 0, 0, .9) 100%)`;
-      if (CommentLimit > 21) {
+      if (CommentLimit > 55) {
         await sleep(1000);
       }
     }
@@ -343,7 +384,7 @@ function PLAYCOMMENT() {
     });
   let href = location.href;
   let observer = new MutationObserver(function () {
-    if (href !== location.href) {
+    if (href.split("?")[0] !== location.href.split("?")[0]) {
       DRAW_ = false;
       document.getElementsByClassName("CommentRenderer")[0].style.display =
         "block";
