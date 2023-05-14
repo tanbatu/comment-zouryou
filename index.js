@@ -254,7 +254,7 @@ async function LOADCOMMENT() {
       }%,rgba(0, 0, 0, .9) ${
         ((fetchedThreadCount + j) / totalThreadCount) * 100
       }%,rgba(0, 0, 0, .9) 100%)`;
-      if (CommentLimit > 55) {
+      if (CommentLimit > 20) {
         await sleep(1000);
       }
     }
