@@ -308,7 +308,7 @@ function PLAYCOMMENT() {
     link.href = URL.createObjectURL(blob); // URLを作成
     link.download = apiData.video.id + ".json"; // ファイル名
 
-    videoElement = document.getElementById("MainVideoPlayer").children[0];
+    videoElement = document.querySelector("#MainVideoPlayer > video");
     aspect = Number(videoElement.videoWidth) / Number(videoElement.videoHeight);
     console.log(aspect);
     function load_NiconiComments() {
@@ -591,7 +591,7 @@ function PREPARE(observe) {
   SuperDanmakuCanvasElement = document.getElementById(
     "SuperDanmakuCanvasElement"
   );
-  videoElement = document.getElementById("MainVideoPlayer").children[0];
+  videoElement = document.querySelector("#MainVideoPlayer > video");
 
   SuperDanmakuCanvasElement.width = 640;
   SuperDanmakuCanvasElement.height = 360;
