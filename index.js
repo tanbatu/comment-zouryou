@@ -298,7 +298,7 @@ function PLAYCOMMENT() {
   );
 
   async function setup() {
-    DefaultVideoContainer.style.display = "block";
+    //DefaultVideoContainer.style.display = "block";
     document.getElementsByClassName("loadbutton_text")[0].innerText =
       "JSONをダウンロード";
 
@@ -393,7 +393,7 @@ function PLAYCOMMENT() {
       document.getElementsByClassName("CommentRenderer")[0].style.display =
         "block";
       CustomVideoContainer.style.display = "none";
-      DefaultVideoContainer.style.display = "block";
+      //DefaultVideoContainer.style.display = "block";
       LoadedCommentCount = 1;
       link.style.visibility = "hidden";
       //CommentLoadingScreen.innerHTML = "";
