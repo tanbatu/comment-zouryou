@@ -2,7 +2,7 @@
   "manifest_version": 3,
   "name": "コメント増量",
   "description": "ニコニコ動画のコメントの表示量を増やす",
-  "version": "4.2",
+  "version": "4.3",
   "content_scripts": [
     {
       "matches": [

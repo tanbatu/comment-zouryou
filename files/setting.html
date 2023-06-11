@@ -384,10 +384,10 @@
                 opacity: 0.5;
                 padding: 8px;
                 position: absolute;
-            ">v4.2</p>
+            ">v4.3</p>
             <div style="padding:14px;display: flex;">
                 <img id="logo" style="width:130px;position: absolute;left: 50%;transform: translate(-50%,0);" src="">
-                <div style="position:absolute;width:18px;right:20px;top:20px;z-index:1" class="CloseButton">
+                <div style="position:absolute;width:18px;right:20px;top:20px;z-index:1" class="ZenkomeCloseButton">
                     <svg viewBox="0 0 100 100" fill-rule="evenodd" clip-rule="evenodd" stroke-linejoin="round"
                         stroke-miterlimit="1.4">
                         <path fill="rgb(255,255,255)"
@@ -492,7 +492,7 @@
                         <div style="padding-top:6px;margin-left:2%;width: 48%;right: 20px;">
                             <b>フレームレート</b><small class="range_val" id="val_alpha">30</small><br>
                             0 <input class="range_bar" id="bar_fps" type="range" name="speed" step="1" value="30"
-                                min="1" max="60">
+                                min="1" max="200">
                             60
                         </div>
                     </div>
@@ -506,7 +506,12 @@
 
                 </div>
                 <div style="padding-top:10px;">
+
                     <h3>その他</h3>
+                    <button style="margin-top:6px;background: white;
+                       padding: 3px;
+                       border-color: gray;
+                   " id="comment_list_open">コメントリストを開く</button>
                     <div style="margin-top:6px;">
                         <input type="checkbox" id="islogger" /><label for="islogger">ログを表示</label>
                     </div>
@@ -522,10 +527,11 @@
                     <div style="margin-top:6px;">
                         <input type="checkbox" id="isdebug" /><label for="isdebug">コメント描画数を表示</label>
                     </div>
-                    <button style="margin-top:6px;background: white;
-                                    padding: 3px;
-                                    border-color: gray;
-                                " id="comment_list_open">コメントリストを開く</button>
+
+                    <div style="margin-top:6px;">
+                        <input type="checkbox" id="isauto" /><label for="isauto">自動読み込み(最大5)</label>
+                        <input type="number" id="auto_num" style="width:40px;" min="2" max="5" value="2">
+                    </div>
                 </div>
             </div>
         </div>

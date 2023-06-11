@@ -21,7 +21,8 @@ let CommentRenderer,
 let COMMENT = [];
 let CommentLimit = 40;
 
-async function LOADCOMMENT() {
+async function LOADCOMMENT(mode) {
+  console.log(mode);
   logger("お待ち下さい");
   loading.style.display = "block";
   //document.getElementById("loaded").style.visibility = "visible";
@@ -85,7 +86,10 @@ async function LOADCOMMENT() {
   let threadKey = nvComment.threadKey;
   for (const i in nvComment.params.targets) {
     const thread = nvComment.params.targets[i];
-    if (document.getElementById("iseasy").checked && thread.fork == "easy") {
+    if (
+      (document.getElementById("iseasy").checked || mode == "auto") &&
+      thread.fork == "easy"
+    ) {
       continue;
     }
     let baseData = {
@@ -287,7 +291,38 @@ async function LOADCOMMENT() {
 }
 
 let niconiComments, comment_list_active;
+let observer = new MutationObserver(function () {
+  if (href.split("?")[0] !== location.href.split("?")[0]) {
+    DRAW_ = false;
+    document.getElementsByClassName("CommentRenderer")[0].style.display =
+      "block";
+    CustomVideoContainer.style.display = "none";
+    //DefaultVideoContainer.style.display = "block";
+    LoadedCommentCount = 1;
+    link.style.visibility = "hidden";
+    //CommentLoadingScreen.innerHTML = "";
+    document.getElementById("loaded").style.visibility = "hidden";
+    document.getElementById("zenkomebutton").disabled = false;
+    pipVideoElement.style.display = "none";
+    document.getElementById("reload_niconicomments").disabled = true;
+    document.getElementsByClassName("loadbutton_text")[0].innerText =
+      "読み込み開始！";
+    href = location.href;
+    COMMENT = [];
+    setTimeout(() => {
+      if (document.getElementById("isauto").checked == true) {
+        //setting.style.display = "block";
+        CommentLimit = document.getElementById("auto_num").value;
+        CommentLimit = CommentLimit > 5 ? 5 : CommentLimit;
+        LOADCOMMENT("auto");
+        document.getElementById("zenkomebutton").disabled = true;
+      }
+    }, 1000);
+  }
+});
+let href = location.href;
 
+observer.observe(document, { childList: true, subtree: true });
 function PLAYCOMMENT() {
   let draw;
   console.log(COMMENT);
@@ -386,28 +421,7 @@ function PLAYCOMMENT() {
           ? 1
           : 0;
     });
-  let href = location.href;
-  let observer = new MutationObserver(function () {
-    if (href.split("?")[0] !== location.href.split("?")[0]) {
-      DRAW_ = false;
-      document.getElementsByClassName("CommentRenderer")[0].style.display =
-        "block";
-      CustomVideoContainer.style.display = "none";
-      //DefaultVideoContainer.style.display = "block";
-      LoadedCommentCount = 1;
-      link.style.visibility = "hidden";
-      //CommentLoadingScreen.innerHTML = "";
-      document.getElementById("loaded").style.visibility = "hidden";
-      document.getElementById("zenkomebutton").disabled = false;
-      pipVideoElement.style.display = "none";
-      document.getElementById("reload_niconicomments").disabled = true;
-      document.getElementsByClassName("loadbutton_text")[0].innerText =
-        "読み込み開始！";
-      href = location.href;
-      COMMENT = [];
-    }
-  });
-  observer.observe(document, { childList: true, subtree: true });
+
   setTimeout(setup, 1000);
 }
 let lastCurrentTime = -1;
@@ -500,7 +514,7 @@ function LIST_COMMENT() {
       })"><p style="width:95%;">${body}</p><p style="padding-top:4px;width:5%;">${nicoru}</p></div>`;
       document.getElementById("comment_list_comments").prepend(commentElement);
     }
-  }, 50);
+  }, 30);
 }
 
 const logger = (msg, load) => {
@@ -624,7 +638,7 @@ function PREPARE(observe) {
   OLD_TIME = document.getElementById("zenkome-time");
   const setting = document.getElementById("allcommentsetting");
 
-  document.getElementsByClassName("CloseButton")[0].addEventListener(
+  document.getElementsByClassName("ZenkomeCloseButton")[0].addEventListener(
     "click",
     () => {
       setting.style.display = "none";
@@ -638,35 +652,51 @@ function PREPARE(observe) {
   const bar_stroke = document.getElementsByClassName("range_bar");
   let get_zouryou_config = localStorage.getItem("zouryou_config");
   let zouryou_config;
-  let comment_size, stroke_opacity, comment_opacity, fps, pip, keepCA;
+  let comment_num,
+    comment_size,
+    stroke_opacity,
+    comment_opacity,
+    fps,
+    pip,
+    keepCA,
+    auto;
   function CONFIG() {
     get_zouryou_config = localStorage.getItem("zouryou_config");
     if (get_zouryou_config == null || get_zouryou_config == "[null]") {
       localStorage.setItem(
         "zouryou_config",
         JSON.stringify({
+          num: 5,
           bar_textsize: 100,
           bar_stroke: 0.35,
           bar_alpha: 100,
           bar_fps: 30,
           keepCA: false,
           pip: false,
+          auto: false,
+          auto_num: 2,
         })
       );
     } else {
       zouryou_config = JSON.parse(get_zouryou_config);
+      comment_num = document.getElementById("load_num");
       comment_size = document.getElementById("bar_textsize");
       stroke_opacity = document.getElementById("bar_stroke");
       comment_opacity = document.getElementById("bar_alpha");
       fps = document.getElementById("bar_fps");
       pip = document.getElementById("iscanvas");
       keepCA = document.getElementById("checkbox4");
+      auto = document.getElementById("isauto");
+      auto_num = document.getElementById("auto_num");
+      comment_num.value = zouryou_config.num;
       comment_size.value = zouryou_config.bar_textsize;
       stroke_opacity.value = zouryou_config.bar_stroke;
       comment_opacity.value = zouryou_config.bar_alpha;
       pip.checked = zouryou_config.pip;
       keepCA.checked = zouryou_config.keepCA;
+      auto.checked = zouryou_config.auto;
       fps.value = zouryou_config.bar_fps;
+      auto_num.value = zouryou_config.auto_num;
       for (let i = 0; i < val_stroke.length; i++) {
         val_stroke[i].innerText = bar_stroke[i].value;
       }
@@ -769,6 +799,12 @@ function PREPARE(observe) {
       ng_element();
     }, 100);
   };
+  document.getElementById("load_num").oninput = () => {
+    get_zouryou_config = localStorage.getItem("zouryou_config");
+    zouryou_config = JSON.parse(get_zouryou_config);
+    zouryou_config.num = document.getElementById("load_num").value;
+    localStorage.setItem("zouryou_config", JSON.stringify(zouryou_config));
+  };
   document.getElementById("checkbox4").onclick = () => {
     get_zouryou_config = localStorage.getItem("zouryou_config");
     zouryou_config = JSON.parse(get_zouryou_config);
@@ -779,6 +815,18 @@ function PREPARE(observe) {
     get_zouryou_config = localStorage.getItem("zouryou_config");
     zouryou_config = JSON.parse(get_zouryou_config);
     zouryou_config.pip = !zouryou_config.pip;
+    localStorage.setItem("zouryou_config", JSON.stringify(zouryou_config));
+  };
+  document.getElementById("isauto").onclick = () => {
+    get_zouryou_config = localStorage.getItem("zouryou_config");
+    zouryou_config = JSON.parse(get_zouryou_config);
+    zouryou_config.auto = !zouryou_config.auto;
+    localStorage.setItem("zouryou_config", JSON.stringify(zouryou_config));
+  };
+  document.getElementById("auto_num").oninput = () => {
+    get_zouryou_config = localStorage.getItem("zouryou_config");
+    zouryou_config = JSON.parse(get_zouryou_config);
+    zouryou_config.auto_num = document.getElementById("auto_num").value;
     localStorage.setItem("zouryou_config", JSON.stringify(zouryou_config));
   };
 
@@ -819,6 +867,13 @@ function PREPARE(observe) {
     niconiComments.showCommentCount =
       document.getElementById("isdebug").checked;
   });
+  if (document.getElementById("isauto").checked == true) {
+    setting.style.display = "block";
+    CommentLimit = document.getElementById("auto_num").value;
+    CommentLimit = CommentLimit > 5 ? 5 : CommentLimit;
+    LOADCOMMENT("auto");
+    document.getElementById("zenkomebutton").disabled = true;
+  }
   document.getElementById("zenkomebutton").onclick = () => {
     let num = document.getElementById("load_num").value;
     CommentLimit = num !== "" ? Number(num) : 5;
@@ -892,4 +947,4 @@ const start = setInterval(() => {
     clearInterval(start);
   }
 }, 50);
-console.log("✨コメント増量 v4.1\nCopyright (c) 2022 tanbatu.");
+console.log("✨コメント増量 v4.3\nCopyright (c) 2022 tanbatu.");
