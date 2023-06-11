@@ -311,7 +311,7 @@ let observer = new MutationObserver(function () {
     COMMENT = [];
     setTimeout(() => {
       if (document.getElementById("isauto").checked == true) {
-        //setting.style.display = "block";
+        document.getElementById("allcommentsetting").style.display = "block";
         CommentLimit = document.getElementById("auto_num").value;
         CommentLimit = CommentLimit > 5 ? 5 : CommentLimit;
         LOADCOMMENT("auto");
@@ -346,6 +346,7 @@ function PLAYCOMMENT() {
     videoElement = document.querySelector("#MainVideoPlayer > video");
     aspect = Number(videoElement.videoWidth) / Number(videoElement.videoHeight);
     console.log(aspect);
+
     function load_NiconiComments() {
       niconiComments = new NiconiComments(zouryouCanvasElement, COMMENT, {
         video: document.getElementById("iscanvas").checked
@@ -408,20 +409,27 @@ function PLAYCOMMENT() {
     });
   LIST_COMMENT();
 
-  document
-    .getElementsByClassName(
-      "ActionButton ControllerButton CommentOnOffButton"
-    )[0]
-    .addEventListener("click", function () {
-      CustomVideoContainer.style.zIndex =
-        document.getElementsByClassName(
-          "ActionButton ControllerButton CommentOnOffButton"
-        )[0].children[0].children[0].className.baseVal ==
-        "CommentOnOffButton-iconShow"
-          ? 1
-          : 0;
-    });
+  let Comment_Show_Button = document.getElementsByClassName(
+    "ActionButton ControllerButton CommentOnOffButton"
+  )[0];
 
+  let Comment_SH = new MutationObserver(function () {
+    CustomVideoContainer.style.zIndex =
+      document.getElementsByClassName(
+        "ActionButton ControllerButton CommentOnOffButton"
+      )[0].children[0].children[0].className.baseVal ==
+      "CommentOnOffButton-iconShow"
+        ? 0
+        : 1;
+  });
+  Comment_SH.observe(Comment_Show_Button, { childList: true, subtree: true });
+  pipVideoElement.style.display = document.getElementById("iscanvas").checked
+    ? "block"
+    : "none";
+  zouryouCanvasElement.style.display = document.getElementById("iscanvas")
+    .checked
+    ? "none"
+    : "block";
   setTimeout(setup, 1000);
 }
 let lastCurrentTime = -1;
@@ -863,6 +871,7 @@ function PREPARE(observe) {
     pipVideoElement.style.display = this.checked ? "block" : "none";
     zouryouCanvasElement.style.display = this.checked ? "none" : "block";
   });
+
   document.getElementById("isdebug").addEventListener("change", function () {
     niconiComments.showCommentCount =
       document.getElementById("isdebug").checked;
