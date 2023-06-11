@@ -956,4 +956,4 @@ const start = setInterval(() => {
     clearInterval(start);
   }
 }, 50);
-console.log("✨コメント増量 v4.3\nCopyright (c) 2022 tanbatu.");
+console.log("✨コメント増量 v5.0\nCopyright (c) 2022 tanbatu.");
