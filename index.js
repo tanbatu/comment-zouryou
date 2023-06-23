@@ -17,7 +17,8 @@ let CommentRenderer,
   DRAW_,
   net,
   firstaccess,
-  aspect;
+  aspect,
+  apiData;
 let COMMENT = [];
 let CommentLimit = 40;
 
@@ -32,7 +33,7 @@ async function LOADCOMMENT(mode) {
     FailCount = 0;
   const parser = new DOMParser();
   const req = await fetch(location.href);
-  const apiData = JSON.parse(
+  apiData = JSON.parse(
     parser
       .parseFromString(await req.text(), "text/html")
       .getElementById("js-initial-watch-data")
@@ -321,27 +322,55 @@ let observer = new MutationObserver(function () {
   }
 });
 let href = location.href;
-
+function getXMLString(json) {
+  console.log(json);
+  var parser = new DOMParser();
+  var xml = '<?xml version="1.0" encoding="UTF-8"?>';
+  xml += `<packet><thread thread="${apiData.comment.threads}" />
+<global_num_res thread="${apiData.comment.threads}" num_res="${json[0].commentCount}"/>
+<leaf thread="${apiData.comment.threads} count="${json[0].commentCount}"/>`;
+  for (const comments of json[0].comments) {
+    xml += `<chat thread="${apiData.comment.threads}" no="${
+      comments.no
+    }" vpos="${comments.vposMs}" date="${Math.floor(
+      new Date(comments.postedAt).getTime()
+    )}" date_usec="00000" premium="${
+      comments.isPremium
+    }" anonymity="1" user_id="${
+      comments.userId
+    }" mail="${comments.commands.join(" ")}">${comments.body}</chat>
+`;
+  }
+  xml += "</packet>";
+  var xmlDoc = parser.parseFromString(xml, "application/xml");
+  console.log(xmlDoc);
+  return xml;
+}
+let download_comment;
+let blob;
 observer.observe(document, { childList: true, subtree: true });
 function PLAYCOMMENT() {
   let draw;
   console.log(COMMENT);
-  const apiData = JSON.parse(
-    document
-      .getElementById("js-initial-watch-data")
-      .getAttribute("data-api-data")
-  );
-
   async function setup() {
     //DefaultVideoContainer.style.display = "block";
-    document.getElementsByClassName("loadbutton_text")[0].innerText =
-      "JSONをダウンロード";
 
-    const blob = new Blob([JSON.stringify(COMMENT)], { type: "text/plain" });
+    if (document.getElementById("isxml").checked) {
+      download_comment = getXMLString(COMMENT);
+      link.download = apiData.video.id + ".xml";
+      document.getElementsByClassName("loadbutton_text")[0].innerText =
+        "XMLをダウンロード";
+    } else {
+      download_comment = [JSON.stringify(COMMENT)];
+      link.download = apiData.video.id + ".json";
+      document.getElementsByClassName("loadbutton_text")[0].innerText =
+        "JSONをダウンロード";
+    }
+
+    blob = new Blob([download_comment], { type: "text/plain" });
 
     link.style.visibility = "visible";
-    link.href = URL.createObjectURL(blob); // URLを作成
-    link.download = apiData.video.id + ".json"; // ファイル名
+    link.href = URL.createObjectURL(blob);
 
     videoElement = document.querySelector("#MainVideoPlayer > video");
     aspect = Number(videoElement.videoWidth) / Number(videoElement.videoHeight);
@@ -667,7 +696,8 @@ function PREPARE(observe) {
     fps,
     pip,
     keepCA,
-    auto;
+    auto,
+    xml;
   function CONFIG() {
     get_zouryou_config = localStorage.getItem("zouryou_config");
     if (get_zouryou_config == null || get_zouryou_config == "[null]") {
@@ -683,6 +713,7 @@ function PREPARE(observe) {
           pip: false,
           auto: false,
           auto_num: 2,
+          xml: false,
         })
       );
     } else {
@@ -696,6 +727,7 @@ function PREPARE(observe) {
       keepCA = document.getElementById("checkbox4");
       auto = document.getElementById("isauto");
       auto_num = document.getElementById("auto_num");
+      xml = document.getElementById("isxml");
       comment_num.value = zouryou_config.num;
       comment_size.value = zouryou_config.bar_textsize;
       stroke_opacity.value = zouryou_config.bar_stroke;
@@ -705,6 +737,7 @@ function PREPARE(observe) {
       auto.checked = zouryou_config.auto;
       fps.value = zouryou_config.bar_fps;
       auto_num.value = zouryou_config.auto_num;
+      xml.checked = zouryou_config.xml;
       for (let i = 0; i < val_stroke.length; i++) {
         val_stroke[i].innerText = bar_stroke[i].value;
       }
@@ -831,6 +864,12 @@ function PREPARE(observe) {
     zouryou_config.auto = !zouryou_config.auto;
     localStorage.setItem("zouryou_config", JSON.stringify(zouryou_config));
   };
+  document.getElementById("isxml").onclick = () => {
+    get_zouryou_config = localStorage.getItem("zouryou_config");
+    zouryou_config = JSON.parse(get_zouryou_config);
+    zouryou_config.xml = !zouryou_config.xml;
+    localStorage.setItem("zouryou_config", JSON.stringify(zouryou_config));
+  };
   document.getElementById("auto_num").oninput = () => {
     get_zouryou_config = localStorage.getItem("zouryou_config");
     zouryou_config = JSON.parse(get_zouryou_config);
@@ -857,6 +896,23 @@ function PREPARE(observe) {
 
   document.getElementById("islogger").addEventListener("change", function () {
     CommentLoadingScreenWrapper.style.display = this.checked ? "block" : "none";
+  });
+  document.getElementById("isxml").addEventListener("change", function () {
+    if (document.getElementById("isxml").checked) {
+      download_comment = getXMLString(COMMENT);
+      link.download = apiData.video.id + ".xml";
+      document.getElementsByClassName("loadbutton_text")[0].innerText =
+        "XMLをダウンロード";
+    } else {
+      download_comment = [JSON.stringify(COMMENT)];
+      link.download = apiData.video.id + ".json";
+      document.getElementsByClassName("loadbutton_text")[0].innerText =
+        "JSONをダウンロード";
+    }
+
+    blob = new Blob([download_comment], { type: "text/plain" });
+    link.style.visibility = "visible";
+    link.href = URL.createObjectURL(blob);
   });
   document.getElementById("ismask").addEventListener("change", function () {
     if (!this.checked) {
