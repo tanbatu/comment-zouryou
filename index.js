@@ -39,6 +39,7 @@ async function LOADCOMMENT(mode) {
       .getElementById("js-initial-watch-data")
       .getAttribute("data-api-data")
   );
+  console.log(apiData);
   const joinObj = function (obj, fDelimiter, sDelimiter) {
     const tmpArr = [];
     if (typeof obj === "undefined") return "";
@@ -335,19 +336,20 @@ let observer = new MutationObserver(function () {
 });
 let href = location.href;
 function getXMLString(json) {
+  console.log(apiData.comment);
   console.log(json);
   var parser = new DOMParser();
   var xml = '<?xml version="1.0" encoding="UTF-8"?>';
-  xml += `<packet><thread thread="${apiData.comment.threads}" />
-<global_num_res thread="${apiData.comment.threads}" num_res="${json[0].commentCount}"/>
-<leaf thread="${apiData.comment.threads} count="${json[0].commentCount}"/>`;
+  xml += `<packet><thread thread="${apiData.comment.threads[0].id}" />
+  <global_num_res thread="${apiData.comment.threads[0].id}" num_res="${json[0].commentCount}"/>
+  <leaf thread="${apiData.comment.threads[0].id}" count="${json[0].commentCount}"/>`;
   for (const comments of json[0].comments) {
-    xml += `<chat thread="${apiData.comment.threads}" no="${
+    xml += `<chat thread="${apiData.comment.threads[0].id}" no="${
       comments.no
-    }" vpos="${comments.vposMs}" date="${Math.floor(
-      new Date(comments.postedAt).getTime()
+    }" vpos="${Math.floor(comments.vposMs / 10)}" date="${Math.floor(
+      new Date(comments.postedAt).getTime() / 1000
     )}" date_usec="00000" premium="${
-      comments.isPremium
+      comments.isPremium ? "1" : "0"
     }" anonymity="1" user_id="${
       comments.userId
     }" mail="${comments.commands.join(" ")}">${comments.body}</chat>
