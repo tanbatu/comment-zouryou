@@ -286,7 +286,8 @@
         .beforewave {
             height: 120px;
             width: 100%;
-            background-color: #83B6DE;
+            background: rgb(107, 158, 227);
+            background: linear-gradient(180deg, rgb(76 164 253) 32%, rgb(94 207 252) 100%)
         }
 
         #wave1 {
@@ -360,6 +361,29 @@
             width: 100%;
             position: absolute;
         }
+
+        .scroll {
+            margin-top: 37px;
+            ;
+        }
+
+        .scroll::-webkit-scrollbar {
+            width: 9px;
+        }
+
+        .scroll::-webkit-scrollbar-track {
+            background-color: #e4e4e4;
+            border-radius: 100px;
+        }
+
+        .scroll::-webkit-scrollbar-thumb {
+            background-color: #818181;
+            border-radius: 100px;
+        }
+
+        .CommentPanelDataGrid {
+            width: calc(100% - 1px);
+        }
     </style>
     <div id="allcommentsetting" style="
         width: 384px;
@@ -400,7 +424,7 @@
             </div>
 
         </div>
-        <div style="position:absolute;top:45px;width:100%;height:155px;;z-index: 200;">
+        <div style="position:absolute;top:45px;width:100%;z-index: 200;">
             <div style="height:105px;padding:0px 15px;display: flex;position: relative;align-items: end;">
                 <input id='load_num' type='number' min='1' step='1' autocomplete='off' placeholder='5'>
                 <h3 style="line-height:2em;left:50%;color:rgb(255, 255, 255);font-size:200%;margin-bottom: 8px;">
@@ -417,12 +441,12 @@
             <div class="wave" id="wave2"></div>
         </div>
 
-        <div style="overflow: auto;height: calc(100% - 173px)">
+        <div class="scroll" style="overflow: auto;height: calc(100% - 210px)">
 
 
             <div style="padding:10px;color:rgb(75, 75, 75)">
 
-                <div style="padding-top:40px;" class="DateTimeInput">
+                <div class="DateTimeInput">
 
                     <h3>始点</h3>
                     <input id="zenkome-date" class="DateTimeInput-date" type="date" value="">
@@ -430,7 +454,10 @@
                         value="23:59">
                 </div>
                 <div style="padding-top:10px;">
-                    <h3>NGリスト</h3>
+
+                    <div style="display:flex">
+                        <h3>NGリスト</h3>
+                    </div>
                     <div style="display: flex;">
                         <div id="ng_list" style="border:rgb(223, 223, 223) solid 2px;width: 48%;height:130px;">
                             <h5 class="ngform" id="form_comment"
@@ -460,14 +487,7 @@
                 <div style="padding-top:10px;">
                     <div style="display:flex">
                         <h3>描画設定</h3>
-                        <button style="   margin-top: 0px;
-    background: white;
-    padding: 3px;
-    margin-left: 5px;
-    border-color: gray;
-    height: 17px;
-    font-size: 7px;" id="reload_niconicomments" disabled>リロード
-                        </button>
+
                     </div>
 
                     <div style="display:flex">
@@ -505,7 +525,15 @@
                     <div style="margin-top:6px;">
                         <input type="checkbox" id="iscanvas" /><label for="iscanvas">キャンバスに動画を描画する(pip用)</label>
                     </div>
-
+                    <button style="   margin-top: 5px;
+                                                                    background: white;
+                                                                    padding: 3px;
+                                                                    
+                                                                    border-color: gray;
+                                                                    height: 17px;
+                                                                    font-size: 7px;" id="reload_niconicomments"
+                        disabled>リロード
+                    </button>
                 </div>
                 <div style="padding-top:10px;">
 

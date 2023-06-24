@@ -282,8 +282,20 @@ async function LOADCOMMENT(mode) {
       id: 0,
     },
   ];
+  document.getElementById("reload_niconicomments").onclick = async () => {
+    COMMENT = [
+      {
+        commentCount: comments.length,
+        comments: await COMMENT_CONTROL(comments),
+        fork: "comment-zouryou",
+        id: 0,
+      },
+    ];
+    load_NiconiComments();
+    clearInterval(list_interval);
+    LIST_COMMENT();
+  };
 
-  logger(comments.length + "件に減りました");
   logger(`描画準備中`);
   document.getElementById(
     "progress_bar"
@@ -349,6 +361,24 @@ function getXMLString(json) {
 let download_comment;
 let blob;
 observer.observe(document, { childList: true, subtree: true });
+
+function load_NiconiComments() {
+  niconiComments = new NiconiComments(zouryouCanvasElement, COMMENT, {
+    video: document.getElementById("iscanvas").checked
+      ? videoElement
+      : undefined,
+    enableLegacyPiP: true,
+    scale: document.getElementById("bar_textsize").value * 0.01,
+    keepCA: document.getElementById("checkbox4").checked,
+    showCommentCount: document.getElementById("isdebug").checked,
+    showFPS: document.getElementById("isdebug").checked,
+    config: (Config = {
+      contextStrokeOpacity: Number(document.getElementById("bar_stroke").value),
+      contextLineWidth: 3.5,
+    }),
+    format: "v1",
+  });
+}
 function PLAYCOMMENT() {
   let draw;
   console.log(COMMENT);
@@ -376,31 +406,9 @@ function PLAYCOMMENT() {
     aspect = Number(videoElement.videoWidth) / Number(videoElement.videoHeight);
     console.log(aspect);
 
-    function load_NiconiComments() {
-      niconiComments = new NiconiComments(zouryouCanvasElement, COMMENT, {
-        video: document.getElementById("iscanvas").checked
-          ? videoElement
-          : undefined,
-        enableLegacyPiP: true,
-        scale: document.getElementById("bar_textsize").value * 0.01,
-        keepCA: document.getElementById("checkbox4").checked,
-        showCommentCount: document.getElementById("isdebug").checked,
-        showFPS: document.getElementById("isdebug").checked,
-        config: (Config = {
-          contextStrokeOpacity: Number(
-            document.getElementById("bar_stroke").value
-          ),
-          contextLineWidth: 3.5,
-        }),
-        format: "v1",
-      });
-    }
     load_NiconiComments();
     document.getElementById("reload_niconicomments").disabled = false;
 
-    document.getElementById("reload_niconicomments").onclick = () => {
-      load_NiconiComments();
-    };
     loading.style.display = "none";
     CustomVideoContainer.style.display = "block";
     console.log(niconiComments);
@@ -521,7 +529,7 @@ async function DANMAKU_SUPER() {
     }
   }, 100);
 }
-
+let list_interval;
 function LIST_COMMENT() {
   COMMENT[0].comments.sort(function (a, b) {
     if (a.vposMs < b.vposMs) return -1;
@@ -530,7 +538,8 @@ function LIST_COMMENT() {
   });
 
   let now_comment_pos = document.getElementById("now_comment_pos");
-  setInterval(() => {
+  list_interval = setInterval(() => {
+    console.log("あ");
     if (videoElement.currentTime === lastCurrentTime) return;
     lastCurrentTime = videoElement.currentTime;
     if (!comment_list_active) return;
@@ -551,7 +560,7 @@ function LIST_COMMENT() {
       })"><p style="width:95%;">${body}</p><p style="padding-top:4px;width:5%;">${nicoru}</p></div>`;
       document.getElementById("comment_list_comments").prepend(commentElement);
     }
-  }, 30);
+  }, 100);
 }
 
 const logger = (msg, load) => {
@@ -606,6 +615,7 @@ const COMMENT_CONTROL = (comments) => {
           (comment) => comment.body.includes(NG) === false
         ))
     );
+    logger(comments.length + "件に減りました");
     resolve(comments);
   });
 };
