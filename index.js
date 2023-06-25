@@ -25,7 +25,6 @@ let CommentLimit = 40;
 async function LOADCOMMENT(mode) {
   logger("お待ち下さい");
   loading.style.display = "block";
-  //document.getElementById("loaded").style.visibility = "visible";
   document.getElementsByClassName("loadbutton_text")[0].innerText =
     "読み込み中";
   let LoadedCommentCount = 1,
@@ -516,7 +515,6 @@ async function DANMAKU_SUPER() {
 
     return net.segmentPerson(img, option);
   }
-  // 绘制帧数据到canvas
 
   async function drawCanvas() {
     if (!net || videoElement.currentTime === lastCurrentTime) return;
@@ -590,8 +588,6 @@ const sleep = (time) => {
     }, time);
   });
 };
-
-//NG機能(試験)
 
 let NG_LIST_COMMAND = [];
 let NG_LIST_COMMENT = [];
@@ -715,7 +711,6 @@ function PREPARE(observe) {
   );
   OLD_DATE.min = "2007-03-03";
   OLD_DATE.max = new Date().getFullYear() + "-12-31";
-  //コメント設定
   const val_stroke = document.getElementsByClassName("range_val");
   const bar_stroke = document.getElementsByClassName("range_bar");
   let get_zouryou_config = localStorage.getItem("zouryou_config");
@@ -787,7 +782,6 @@ function PREPARE(observe) {
     }
   }
 
-  //NG取得とか
   let ng_storage = localStorage.getItem("ng_storage");
   let ngarray,
     SETTING_NG_LIST_COMMENT,
@@ -1003,7 +997,6 @@ function PREPARE(observe) {
   document.getElementById("zenkomebutton").onclick = () => {
     let num = document.getElementById("load_num").value;
     CommentLimit = num !== "" ? Number(num) : 5;
-    //CommentLoadingScreenWrapper.style.display = "block";
     document.getElementById("zenkomebutton").disabled = true;
 
     LOADCOMMENT();
@@ -1073,4 +1066,4 @@ const start = setInterval(() => {
     clearInterval(start);
   }
 }, 50);
-console.log("✨コメント増量 v5.0\nCopyright (c) 2022 tanbatu.");
+console.log("✨コメント増量 v6.0\nCopyright (c) 2022 tanbatu.");
