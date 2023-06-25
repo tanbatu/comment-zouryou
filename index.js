@@ -23,7 +23,6 @@ let COMMENT = [];
 let CommentLimit = 40;
 
 async function LOADCOMMENT(mode) {
-  console.log(mode);
   logger("お待ち下さい");
   loading.style.display = "block";
   //document.getElementById("loaded").style.visibility = "visible";
@@ -39,7 +38,6 @@ async function LOADCOMMENT(mode) {
       .getElementById("js-initial-watch-data")
       .getAttribute("data-api-data")
   );
-  console.log(apiData);
   const joinObj = function (obj, fDelimiter, sDelimiter) {
     const tmpArr = [];
     if (typeof obj === "undefined") return "";
@@ -307,6 +305,11 @@ async function LOADCOMMENT(mode) {
 let niconiComments, comment_list_active;
 let observer = new MutationObserver(function () {
   if (href.split("?")[0] !== location.href.split("?")[0]) {
+    document.getElementById("loaded").style.zIndex = "0";
+    document.getElementById("wrapper_buttons").style.height = "0px";
+    document.getElementById("wrapper_buttons").style.opacity = "0";
+    document.getElementsByClassName("scroll")[0].style.height =
+      "calc(100% - 171px)";
     DRAW_ = false;
     document.getElementsByClassName("CommentRenderer")[0].style.display =
       "block";
@@ -336,8 +339,6 @@ let observer = new MutationObserver(function () {
 });
 let href = location.href;
 function getXMLString(json) {
-  console.log(apiData.comment);
-  console.log(json);
   var parser = new DOMParser();
   var xml = '<?xml version="1.0" encoding="UTF-8"?>';
   xml += `<packet><thread thread="${apiData.comment.threads[0].id}" />
@@ -357,7 +358,6 @@ function getXMLString(json) {
   }
   xml += "</packet>";
   var xmlDoc = parser.parseFromString(xml, "application/xml");
-  console.log(xmlDoc);
   return xml;
 }
 let download_comment;
@@ -432,7 +432,14 @@ function PLAYCOMMENT() {
     pipVideoElement.play();
 
     void DANMAKU_SUPER();
+    setTimeout(() => {
+      document.getElementById("wrapper_buttons").style.height = "30px";
+      document.getElementById("wrapper_buttons").style.opacity = "1";
+      document.getElementsByClassName("scroll")[0].style.height =
+        "calc(100% - 201px)";
+    }, 200);
   }
+  document.getElementById("loaded").style.zIndex = "2";
   const comment_list = document.getElementById("comment_list");
   document
     .getElementById("comment_list_open")
@@ -541,7 +548,6 @@ function LIST_COMMENT() {
 
   let now_comment_pos = document.getElementById("now_comment_pos");
   list_interval = setInterval(() => {
-    console.log("あ");
     if (videoElement.currentTime === lastCurrentTime) return;
     lastCurrentTime = videoElement.currentTime;
     if (!comment_list_active) return;
@@ -562,7 +568,7 @@ function LIST_COMMENT() {
       })"><p style="width:95%;">${body}</p><p style="padding-top:4px;width:5%;">${nicoru}</p></div>`;
       document.getElementById("comment_list_comments").prepend(commentElement);
     }
-  }, 100);
+  }, 30);
 }
 
 const logger = (msg, load) => {
@@ -591,6 +597,11 @@ let NG_LIST_COMMAND = [];
 let NG_LIST_COMMENT = [];
 const COMMENT_CONTROL = (comments) => {
   return new Promise((resolve) => {
+    let ng_score = document.getElementById("ng_score").value;
+    let nicoru_limit = document.getElementById("nicoru_num");
+    let premium_filter = document.getElementById("premium_filter");
+
+    console.log(ng_score);
     for (const i in comments) {
       const comment = comments[i];
       if (comment.commands === undefined) {
@@ -617,6 +628,14 @@ const COMMENT_CONTROL = (comments) => {
           (comment) => comment.body.includes(NG) === false
         ))
     );
+    comments = comments.filter((comment) => comment.score >= ng_score);
+    comments = comments.filter(
+      (comment) => comment.nicoruCount >= nicoru_limit.value
+    );
+    if (premium_filter.checked) {
+      comments = comments.filter((comment) => comment.isPremium === true);
+    }
+
     logger(comments.length + "件に減りました");
     resolve(comments);
   });
@@ -709,7 +728,10 @@ function PREPARE(observe) {
     pip,
     keepCA,
     auto,
-    xml;
+    xml,
+    ngscore,
+    nicoru_limit,
+    premium_filter;
   function CONFIG() {
     get_zouryou_config = localStorage.getItem("zouryou_config");
     if (get_zouryou_config == null || get_zouryou_config == "[null]") {
@@ -726,6 +748,9 @@ function PREPARE(observe) {
           auto: false,
           auto_num: 2,
           xml: false,
+          ngscore: "-Infinity",
+          nicoru_limit: 0,
+          premium_filter: false,
         })
       );
     } else {
@@ -740,6 +765,9 @@ function PREPARE(observe) {
       auto = document.getElementById("isauto");
       auto_num = document.getElementById("auto_num");
       xml = document.getElementById("isxml");
+      ngscore = document.getElementById("ng_score");
+      nicoru_limit = document.getElementById("nicoru_num");
+      premium_filter = document.getElementById("premium_filter");
       comment_num.value = zouryou_config.num;
       comment_size.value = zouryou_config.bar_textsize;
       stroke_opacity.value = zouryou_config.bar_stroke;
@@ -750,6 +778,9 @@ function PREPARE(observe) {
       fps.value = zouryou_config.bar_fps;
       auto_num.value = zouryou_config.auto_num;
       xml.checked = zouryou_config.xml;
+      nicoru_limit.value = zouryou_config.nicoru_limit || 0;
+      premium_filter.checked = zouryou_config.premium_filter || false;
+      ngscore.value = zouryou_config.ngscore || "-Infinity";
       for (let i = 0; i < val_stroke.length; i++) {
         val_stroke[i].innerText = bar_stroke[i].value;
       }
@@ -886,6 +917,24 @@ function PREPARE(observe) {
     get_zouryou_config = localStorage.getItem("zouryou_config");
     zouryou_config = JSON.parse(get_zouryou_config);
     zouryou_config.auto_num = document.getElementById("auto_num").value;
+    localStorage.setItem("zouryou_config", JSON.stringify(zouryou_config));
+  };
+  document.getElementById("nicoru_num").oninput = () => {
+    get_zouryou_config = localStorage.getItem("zouryou_config");
+    zouryou_config = JSON.parse(get_zouryou_config);
+    zouryou_config.nicoru_limit = document.getElementById("nicoru_num").value;
+    localStorage.setItem("zouryou_config", JSON.stringify(zouryou_config));
+  };
+  document.getElementById("ng_score").onchange = () => {
+    get_zouryou_config = localStorage.getItem("zouryou_config");
+    zouryou_config = JSON.parse(get_zouryou_config);
+    zouryou_config.ngscore = document.getElementById("ng_score").value;
+    localStorage.setItem("zouryou_config", JSON.stringify(zouryou_config));
+  };
+  document.getElementById("premium_filter").onclick = () => {
+    get_zouryou_config = localStorage.getItem("zouryou_config");
+    zouryou_config = JSON.parse(get_zouryou_config);
+    zouryou_config.premium_filter = !zouryou_config.premium_filter;
     localStorage.setItem("zouryou_config", JSON.stringify(zouryou_config));
   };
 

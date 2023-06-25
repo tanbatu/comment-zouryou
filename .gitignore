@@ -25,3 +25,4 @@ dist-ssr
 
 build
 comment-zouryou.code-workspace
+test/*
