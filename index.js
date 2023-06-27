@@ -250,13 +250,14 @@ async function LOADCOMMENT(mode) {
           }まで読み込みました`
         );
       }
-      document.getElementById(
-        "progress_bar"
-      ).style.background = `linear-gradient(90deg,rgb(0, 145, 255,0.9) 0%,#0ff ${
+      document.getElementById("progress_left").style.width =
+        100 -
+        ((fetchedThreadCount + j) / totalThreadCount) * 100 +
+        "%"; /*.background = `linear-gradient(90deg,rgb(0, 145, 255,0.9) 0%,#0ff ${
         ((fetchedThreadCount + j) / totalThreadCount) * 100
       }%,rgba(0, 0, 0, .9) ${
         ((fetchedThreadCount + j) / totalThreadCount) * 100
-      }%,rgba(0, 0, 0, .9) 100%)`;
+      }%,rgba(0, 0, 0, .9) 100%)`;*/
       let LimitRate = 20;
       if (NG_LIST_COMMAND.includes("speedmode")) {
         LimitRate = 1000;
@@ -295,9 +296,7 @@ async function LOADCOMMENT(mode) {
   };
 
   logger(`描画準備中`);
-  document.getElementById(
-    "progress_bar"
-  ).style.background = `linear-gradient(90deg,rgb(0, 145, 255,0.9) 0%,#0ff 100%`;
+  document.getElementById("progress_left").style.width = "0%";
   PLAYCOMMENT();
 }
 
@@ -323,6 +322,7 @@ let observer = new MutationObserver(function () {
     document.getElementById("reload_niconicomments").disabled = true;
     document.getElementsByClassName("loadbutton_text")[0].innerText =
       "読み込み開始！";
+    document.getElementById("progress_left").style.width = "100%";
     href = location.href;
     COMMENT = [];
     setTimeout(() => {
