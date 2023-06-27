@@ -361,7 +361,9 @@
             position: absolute;
         }
 
-        .scroll {}
+        .scroll {
+            margin-top: 20px;
+        }
 
         .scroll::-webkit-scrollbar {
             width: 9px;
@@ -446,6 +448,7 @@
                 position: absolute;
             ">v6.0</p>
             </a>
+
             <div style="padding:14px;display: flex;">
                 <img id="logo" style="width:130px;position: absolute;left: 50%;transform: translate(-50%,0);" src="">
                 <div style="position:absolute;width:18px;right:20px;top:20px;z-index:1" class="ZenkomeCloseButton">
@@ -471,23 +474,33 @@
         </div>
         <div class="beforewave"></div>
         <div class="card">
-
+            <div
+                style="height: 50%;margin-top: 20px;pointer-events: none;width: 97%;background: linear-gradient( white, #ffffff00);">
+            </div>
             <div class="wave" id="wave1"></div>
             <div class="wave" id="wave2"></div>
         </div>
 
-        <div class="scroll" style="overflow: auto;height: calc(100% - 171px) ;transition: 0.5s;">
+        <div class="scroll" style="overflow: auto;height: calc(100% - 201px) ;transition: 0.5s;">
 
 
             <div style="padding:10px;color:rgb(75, 75, 75)">
+                <div style="margin-top:20px" class="config_parts">
+                    <div style="width:100%" class="DateTimeInput">
+                        <div>
+                            <h3>始点</h3>
+                            <input id="zenkome-date" class="DateTimeInput-date" type="date" value="">
+                            <input style="margin-left:10px" id="zenkome-time" class="DateTimeInput-time" type="time"
+                                value="23:59">
+                        </div>
+                    </div>
+                    <div style="margin-top:6px;">
+                        <input type="checkbox" id="iseasy" /><label for="iseasy">かんたんコメントを読み込まない</label>
+                    </div>
 
-                <div style="margin-top:40px;width:100%" class="DateTimeInput config_parts">
 
-                    <h3>始点</h3>
-                    <input id="zenkome-date" class="DateTimeInput-date" type="date" value="">
-                    <input style="margin-left:10px" id="zenkome-time" class="DateTimeInput-time" type="time"
-                        value="23:59">
                 </div>
+
                 <div class="config_parts" style="padding-top:10px;">
                     <div style="display:flex">
                         <h3>描画設定</h3>
@@ -519,7 +532,7 @@
                             <b>フレームレート</b><small class="range_val" id="val_alpha">30</small><br>
                             0 <input class="range_bar" id="bar_fps" type="range" name="speed" step="1" value="30"
                                 min="1" max="200">
-                            60
+                            200
                         </div>
                     </div>
 
@@ -559,19 +572,18 @@
                     </div>
                     <div style="margin-top:6px;display:flex">
                         <p>NG共有レベル</p>
-                        <select style="margin-left:5px;border-color:#bbb" id="ng_score" name="example">
+                        <select style="margin-left:5px;border-color:#bbb;width: 51px;" id="ng_score" name="example">
                             <option value="-Infinity">無</option>
                             <option value="-10000">弱</option>
                             <option value="-4800">中</option>
                             <option value="-1000">強</option>
-                            <option value="-1">最強</option>
+                            <option value="-1">最強(スコア0未満全て)</option>
                         </select>
+
                     </div>
 
 
-                    <div style="margin-top:6px;">
-                        <input type="checkbox" id="iseasy" /><label for="iseasy">かんたんコメントを読み込まない</label>
-                    </div>
+
                 </div>
                 <div class="config_parts" style="padding-top:10px;">
 
@@ -614,8 +626,8 @@
                         <input type="checkbox" id="isxml" /><label for="isxml">XMLでダウンロード</label>
                     </div>
                     <div style="margin-top:6px;">
-                        <input type="checkbox" id="isauto" /><label for="isauto">自動読み込み(最大5)</label>
-                        <input type="number" id="auto_num" style="width:40px;" min="2" max="5" value="2">
+                        <input type="checkbox" id="isauto" /><label for="isauto">自動読み込み</label>
+                        <input type="number" id="auto_num" style="width:40px;" min="2" value="2">倍
                     </div>
                     <br>
                     <small><b><a target="_blank"

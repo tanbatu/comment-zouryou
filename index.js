@@ -329,7 +329,7 @@ let observer = new MutationObserver(function () {
       if (document.getElementById("isauto").checked == true) {
         document.getElementById("allcommentsetting").style.display = "block";
         CommentLimit = document.getElementById("auto_num").value;
-        CommentLimit = CommentLimit > 5 ? 5 : CommentLimit;
+        //CommentLimit = CommentLimit > 5 ? 5 : CommentLimit;
         LOADCOMMENT("auto");
         document.getElementById("zenkomebutton").disabled = true;
       }
@@ -337,6 +337,19 @@ let observer = new MutationObserver(function () {
   }
 });
 let href = location.href;
+function escapeHtml(text) {
+  var map = {
+    "&": "&amp;",
+    "<": "&lt;",
+    ">": "&gt;",
+    '"': "&quot;",
+    "'": "&#039;",
+  };
+
+  return text.replace(/[&<>"']/g, function (m) {
+    return map[m];
+  });
+}
 function getXMLString(json) {
   var parser = new DOMParser();
   var xml = '<?xml version="1.0" encoding="UTF-8"?>';
@@ -352,7 +365,7 @@ function getXMLString(json) {
       comments.isPremium ? "1" : "0"
     }" anonymity="1" user_id="${
       comments.userId
-    }" mail="${comments.commands.join(" ")}">${comments.body}</chat>
+    }" mail="${comments.commands.join(" ")}">${escapeHtml(comments.body)}</chat>
 `;
   }
   xml += "</packet>";
@@ -435,7 +448,7 @@ function PLAYCOMMENT() {
       document.getElementById("wrapper_buttons").style.height = "30px";
       document.getElementById("wrapper_buttons").style.opacity = "1";
       document.getElementsByClassName("scroll")[0].style.height =
-        "calc(100% - 201px)";
+        "calc(100% - 221px)";
     }, 200);
   }
   document.getElementById("loaded").style.zIndex = "2";
@@ -780,6 +793,12 @@ function PREPARE(observe) {
         val_stroke[i].innerText = bar_stroke[i].value;
       }
     }
+    let l = document.getElementById("load_num");
+    if (l.value.length >= 4) {
+      l.style.width = "60%";
+    } else {
+      l.style.width = "50%";
+    }
   }
 
   let ng_storage = localStorage.getItem("ng_storage");
@@ -878,6 +897,13 @@ function PREPARE(observe) {
     }, 100);
   };
   document.getElementById("load_num").oninput = () => {
+    let l = document.getElementById("load_num");
+    if (l.value.length >= 4) {
+      l.style.width = "60%";
+    } else {
+      l.style.width = "50%";
+    }
+
     get_zouryou_config = localStorage.getItem("zouryou_config");
     zouryou_config = JSON.parse(get_zouryou_config);
     zouryou_config.num = document.getElementById("load_num").value;
@@ -990,7 +1016,7 @@ function PREPARE(observe) {
   if (document.getElementById("isauto").checked == true) {
     setting.style.display = "block";
     CommentLimit = document.getElementById("auto_num").value;
-    CommentLimit = CommentLimit > 5 ? 5 : CommentLimit;
+    //CommentLimit = CommentLimit > 5 ? 5 : CommentLimit;
     LOADCOMMENT("auto");
     document.getElementById("zenkomebutton").disabled = true;
   }
