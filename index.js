@@ -702,7 +702,7 @@ function PREPARE(observe) {
   CustomVideoContainer.style.display = "none";
   CustomVideoContainer.style.zIndex = "1";
   CustomVideoContainer.style.pointerEvents = "none";
-  zouryouCanvasElement.style = `position:absolute;top:0;left:0;width:100%;height:100%;z-index:0;display:block;`;
+  zouryouCanvasElement.style = `position:absolute;top:0;left:0;width:100%;height:100%;z-index:0;display:block;object-fit:contain;`;
   SuperDanmakuCanvasElement.style =
     "position:absolute;top:0;left:0;width:100%;height:100%;z-index:1;display:block;opacity:0;";
   pipVideoElement.style =
