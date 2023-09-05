@@ -60,6 +60,7 @@ async function LOADCOMMENT(mode) {
     OLD_DATE.value === ""
       ? new Date()
       : new Date(OLD_DATE.value + " " + OLD_TIME.value);
+  const ownerComments = [];
   const comments = [];
   let isLoggedIn = true,
     params = {
@@ -167,7 +168,7 @@ async function LOADCOMMENT(mode) {
           await prepareLegacy();
           continue;
         }
-        comments.push(...res.data.threads[0].comments);
+        (thread.fork==="owner"?ownerComments:comments).push(...res.data.threads[0].comments);
         if (
           res.data.threads[0].comments.length === 0 ||
           res.data.threads[0].comments[0].no < 5
@@ -219,7 +220,7 @@ async function LOADCOMMENT(mode) {
         }
         for (const comment of comments_tmp) {
           //
-          comments.push({
+          (!!comment.user_id ? comments : ownerComments).push({
             body: comment.chat.content,
             commands: comment.chat.mail?.split(/\s+/g),
             id: 0,
@@ -279,6 +280,12 @@ async function LOADCOMMENT(mode) {
       comments: await COMMENT_CONTROL(comments),
       fork: "comment-zouryou",
       id: 0,
+    },
+    {
+      commentCount: ownerComments.length,
+      comments: ownerComments,//投稿者コメントにフィルターを適用する?
+      fork: "owner",
+      id: 1,
     },
   ];
   document.getElementById("reload_niconicomments").onclick = async () => {
@@ -702,7 +709,7 @@ function PREPARE(observe) {
   CustomVideoContainer.style.display = "none";
   CustomVideoContainer.style.zIndex = "1";
   CustomVideoContainer.style.pointerEvents = "none";
-  zouryouCanvasElement.style = `position:absolute;top:0;left:0;width:100%;height:100%;z-index:0;display:block;`;
+  zouryouCanvasElement.style = `position:absolute;top:0;left:0;width:100%;height:100%;z-index:0;display:block;object-fit:contain;`;
   SuperDanmakuCanvasElement.style =
     "position:absolute;top:0;left:0;width:100%;height:100%;z-index:1;display:block;opacity:0;";
   pipVideoElement.style =
