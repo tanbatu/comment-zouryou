@@ -168,7 +168,9 @@ async function LOADCOMMENT(mode) {
           await prepareLegacy();
           continue;
         }
-        (thread.fork==="owner"?ownerComments:comments).push(...res.data.threads[0].comments);
+        (thread.fork === "owner" ? ownerComments : comments).push(
+          ...res.data.threads[0].comments
+        );
         if (
           res.data.threads[0].comments.length === 0 ||
           res.data.threads[0].comments[0].no < 5
@@ -283,7 +285,7 @@ async function LOADCOMMENT(mode) {
     },
     {
       commentCount: ownerComments.length,
-      comments: ownerComments,//投稿者コメントにフィルターを適用する?
+      comments: ownerComments, //投稿者コメントにフィルターを適用する?
       fork: "owner",
       id: 1,
     },
@@ -400,6 +402,16 @@ function load_NiconiComments() {
     format: "v1",
   });
 }
+function ADDCOMMENT(val, pos, mail) {
+  niconiComments.addComments({
+    vpos: pos,
+    content: val,
+    owner: false,
+    premium: true,
+    mail: ["184", "nico:waku:#fff321"].concat(mail),
+    layer: -1,
+  });
+}
 function PLAYCOMMENT() {
   let draw;
   console.log(COMMENT);
@@ -438,6 +450,7 @@ function PLAYCOMMENT() {
     function draw() {
       niconiComments.drawCanvas(Math.floor(videoElement.currentTime * 100));
       if (draw == false) return;
+
       setTimeout(draw, 1000 / document.getElementById("bar_fps").value);
     }
     draw();
@@ -495,6 +508,35 @@ function PLAYCOMMENT() {
     .checked
     ? "none"
     : "block";
+
+  document
+    .getElementsByClassName("ActionButton CommentPostButton")[0]
+    .addEventListener("click", () => {
+      ADDCOMMENT(
+        document.querySelector(".CommentInput > textarea").value,
+        Math.floor(videoElement.currentTime * 100),
+        document
+          .getElementsByClassName("CommentCommandInput")[0]
+          .value.split(" ")
+      );
+    });
+
+  document
+    .querySelector(".CommentInput > textarea")
+    .addEventListener("keydown", (e) => {
+      if (
+        e.keyCode === 13 &&
+        document.querySelector(".CommentInput > textarea").value != ""
+      ) {
+        ADDCOMMENT(
+          document.querySelector(".CommentInput > textarea").value,
+          Math.floor(videoElement.currentTime * 100),
+          document
+            .getElementsByClassName("CommentCommandInput")[0]
+            .value.split(" ")
+        );
+      }
+    });
   setTimeout(setup, 1000);
 }
 let lastCurrentTime = -1;
@@ -759,6 +801,7 @@ function PREPARE(observe) {
           bar_alpha: 100,
           bar_fps: 30,
           keepCA: false,
+          mode: "html5",
           pip: false,
           auto: false,
           auto_num: 2,
