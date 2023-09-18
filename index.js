@@ -161,12 +161,17 @@ async function LOADCOMMENT(mode) {
           continue;
         }
         if (res?.meta?.errorCode === "INVALID_TOKEN") {
-          logger("旧コメントAPIに切り替えています...");
+          logger("ログインしていません。");
+          alert(
+            "【コメント増量】ログアウト状態です。ログインをして再度実行してください。"
+          );
+          document.getElementById("loading").style.display = "none";
+          document.getElementById("allcommentsetting").style.display = "none";
           isLoggedIn = false;
           j--;
           totalThreadCount /= 3;
-          await prepareLegacy();
-          continue;
+          //await prepareLegacy();
+          //continue;
         }
         (thread.fork === "owner" ? ownerComments : comments).push(
           ...res.data.threads[0].comments
