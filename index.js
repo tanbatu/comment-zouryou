@@ -444,6 +444,9 @@ function PLAYCOMMENT() {
     aspect = Number(videoElement.videoWidth) / Number(videoElement.videoHeight);
     console.log(aspect);
 
+    zouryouCanvasElement.style.opacity =
+      document.getElementById("bar_alpha").value * 0.01;
+
     load_NiconiComments();
     document.getElementById("reload_niconicomments").disabled = false;
 
@@ -1147,4 +1150,4 @@ const start = setInterval(() => {
     clearInterval(start);
   }
 }, 50);
-console.log("✨コメント増量 v6.2\nCopyright (c) 2022 tanbatu.");
+console.log("✨コメント増量 v6.3\nCopyright (c) 2022 tanbatu.");
