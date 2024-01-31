@@ -303,6 +303,12 @@ async function LOADCOMMENT(mode) {
         fork: "comment-zouryou",
         id: 0,
       },
+      {
+        commentCount: ownerComments.length,
+        comments: ownerComments, //投稿者コメントにフィルターを適用する?
+        fork: "owner",
+        id: 1,
+      },
     ];
     load_NiconiComments();
     clearInterval(list_interval);
@@ -627,14 +633,18 @@ function LIST_COMMENT() {
     document.getElementById("comment_list_comments").innerHTML = "";
     for (let i = 0; i < 30; i++) {
       let body = COMMENT[0].comments[passIndex - i]?.body;
-      let nicoru = COMMENT[0].comments[passIndex - i]?.nicoruCount;
+      let nicoru = COMMENT[0].comments[passIndex - i]?.nicoruCount || "";
       if (body == undefined) body = "";
       let commentElement = document.createElement("div");
       commentElement.className = "list_comment";
-      commentElement.innerHTML = `<div style="padding:0px 2px;display:flex;background-color:rgba(243, 186, 0, ${
-        nicoru / 10
-      })"><p style="width:95%;">${body}</p><p style="padding-top:4px;width:5%;">${nicoru}</p></div>`;
-      document.getElementById("comment_list_comments").prepend(commentElement);
+      if (body != "") {
+        commentElement.innerHTML = `<div style="padding:0px 2px;display:flex;background-color:rgba(243, 186, 0, ${
+          nicoru / 10
+        })"><p style="width:95%;">${body}</p><p style="padding-top:4px;width:5%;">${nicoru}</p></div>`;
+        document
+          .getElementById("comment_list_comments")
+          .prepend(commentElement);
+      }
     }
   }, 30);
 }
@@ -740,6 +750,11 @@ function PREPARE(observe) {
     "SuperDanmakuCanvasElement"
   );
   videoElement = document.querySelector("#MainVideoPlayer > video");
+
+  let seekBar = document.getElementsByClassName("SeekBar")[0];
+  if (seekBar.classList.contains("is-disabled")) {
+    seekBar.classList.remove("is-disabled");
+  }
 
   SuperDanmakuCanvasElement.width = 640;
   SuperDanmakuCanvasElement.height = 360;
@@ -1150,4 +1165,4 @@ const start = setInterval(() => {
     clearInterval(start);
   }
 }, 50);
-console.log("✨コメント増量 v6.3\nCopyright (c) 2022 tanbatu.");
+console.log("✨コメント増量 v6.4\nCopyright (c) 2022 tanbatu.");
