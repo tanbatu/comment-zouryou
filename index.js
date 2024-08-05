@@ -727,7 +727,7 @@ const COMMENT_CONTROL = (comments) => {
 
 function PREPARE(observe) {
   document
-    .getElementsByClassName("d_flex flex_column gap_x2")[2]
+    .getElementsByClassName("grid-area_[sidebar]")[0]
     .insertAdjacentHTML("afterbegin", setting_html);
   let customStyle = document.createElement("style");
   customStyle.innerHTML =
