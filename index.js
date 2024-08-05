@@ -30,13 +30,14 @@ async function LOADCOMMENT(mode) {
   let LoadedCommentCount = 1,
     FailCount = 0;
   const parser = new DOMParser();
-  const req = await fetch(location.href);
-  apiData = JSON.parse(
-    parser
-      .parseFromString(await req.text(), "text/html")
-      .getElementById("js-initial-watch-data")
-      .getAttribute("data-api-data")
+
+  const match = location.href.match(/\/watch\/(sm\d+)/);
+
+  const req = await fetch(
+    "https://www.nicovideo.jp/watch/" + match[1] + "?responseType=json"
   );
+  apiData = (await req.json()).data.response;
+
   const joinObj = function (obj, fDelimiter, sDelimiter) {
     const tmpArr = [];
     if (typeof obj === "undefined") return "";
@@ -345,6 +346,11 @@ let observer = new MutationObserver(function () {
     document.getElementById("progress_left").style.width = "100%";
     href = location.href;
     COMMENT = [];
+
+    //(仮)用の措置
+    document.getElementById("AllCommentViewButton").style.display = "none";
+    document.getElementById("allcommentsetting").style.display = "none";
+    /*
     setTimeout(() => {
       if (document.getElementById("isauto").checked == true) {
         document.getElementById("allcommentsetting").style.display = "block";
@@ -353,7 +359,7 @@ let observer = new MutationObserver(function () {
         LOADCOMMENT("auto");
         document.getElementById("zenkomebutton").disabled = true;
       }
-    }, 1000);
+    }, 1000);*/
   }
 });
 let href = location.href;
@@ -446,7 +452,7 @@ function PLAYCOMMENT() {
     link.style.visibility = "visible";
     link.href = URL.createObjectURL(blob);
 
-    videoElement = document.querySelector("#MainVideoPlayer > video");
+    videoElement = PlayerContainer.children[0];
     aspect = Number(videoElement.videoWidth) / Number(videoElement.videoHeight);
     console.log(aspect);
 
@@ -470,14 +476,15 @@ function PLAYCOMMENT() {
     draw();
 
     console.log(videoElement);
-    document.getElementsByClassName("CommentRenderer")[0].style.display =
-      "none";
-
+    document.querySelector('[data-name="comment"]').style.display = "none";
+    //document.getElementsByClassName("CommentRenderer")[0].style.display =
+    //  "none";
+    //
     pipVideoElement.srcObject = zouryouCanvasElement.captureStream(60);
     pipVideoElement.muted = true;
     pipVideoElement.play();
 
-    void DANMAKU_SUPER();
+    //void DANMAKU_SUPER();
     setTimeout(() => {
       document.getElementById("wrapper_buttons").style.height = "30px";
       document.getElementById("wrapper_buttons").style.opacity = "1";
@@ -501,20 +508,20 @@ function PLAYCOMMENT() {
     });
   LIST_COMMENT();
 
-  let Comment_Show_Button = document.getElementsByClassName(
-    "ActionButton ControllerButton CommentOnOffButton"
-  )[0];
-
-  let Comment_SH = new MutationObserver(function () {
-    CustomVideoContainer.style.zIndex =
-      document.getElementsByClassName(
-        "ActionButton ControllerButton CommentOnOffButton"
-      )[0].children[0].children[0].className.baseVal ==
-      "CommentOnOffButton-iconShow"
-        ? 0
-        : 1;
-  });
-  Comment_SH.observe(Comment_Show_Button, { childList: true, subtree: true });
+  // let Comment_Show_Button = document.getElementsByClassName(
+  //   "ActionButton ControllerButton CommentOnOffButton"
+  // )[0];
+  //
+  // let Comment_SH = new MutationObserver(function () {
+  //   CustomVideoContainer.style.zIndex =
+  //     document.getElementsByClassName(
+  //       "ActionButton ControllerButton CommentOnOffButton"
+  //     )[0].children[0].children[0].className.baseVal ==
+  //     "CommentOnOffButton-iconShow"
+  //       ? 0
+  //       : 1;
+  // });
+  // Comment_SH.observe(Comment_Show_Button, { childList: true, subtree: true });
   pipVideoElement.style.display = document.getElementById("iscanvas").checked
     ? "block"
     : "none";
@@ -523,37 +530,38 @@ function PLAYCOMMENT() {
     ? "none"
     : "block";
 
-  document
-    .getElementsByClassName("ActionButton CommentPostButton")[0]
-    .addEventListener("click", () => {
-      ADDCOMMENT(
-        document.querySelector(".CommentInput > textarea").value,
-        Math.floor(videoElement.currentTime * 100),
-        document
-          .getElementsByClassName("CommentCommandInput")[0]
-          .value.split(" ")
-      );
-    });
-
-  document
-    .querySelector(".CommentInput > textarea")
-    .addEventListener("keydown", (e) => {
-      if (
-        e.keyCode === 13 &&
-        document.querySelector(".CommentInput > textarea").value != ""
-      ) {
-        ADDCOMMENT(
-          document.querySelector(".CommentInput > textarea").value,
-          Math.floor(videoElement.currentTime * 100),
-          document
-            .getElementsByClassName("CommentCommandInput")[0]
-            .value.split(" ")
-        );
-      }
-    });
+  //document
+  //  .getElementsByClassName("ActionButton CommentPostButton")[0]
+  //  .addEventListener("click", () => {
+  //    ADDCOMMENT(
+  //      document.querySelector(".CommentInput > textarea").value,
+  //      Math.floor(videoElement.currentTime * 100),
+  //      document
+  //        .getElementsByClassName("CommentCommandInput")[0]
+  //        .value.split(" ")
+  //    );
+  //  });
+  //
+  //document
+  //  .querySelector(".CommentInput > textarea")
+  //  .addEventListener("keydown", (e) => {
+  //    if (
+  //      e.keyCode === 13 &&
+  //      document.querySelector(".CommentInput > textarea").value != ""
+  //    ) {
+  //      ADDCOMMENT(
+  //        document.querySelector(".CommentInput > textarea").value,
+  //        Math.floor(videoElement.currentTime * 100),
+  //        document
+  //          .getElementsByClassName("CommentCommandInput")[0]
+  //          .value.split(" ")
+  //      );
+  //    }
+  //  });
   setTimeout(setup, 1000);
 }
 let lastCurrentTime = -1;
+/*
 async function DANMAKU_SUPER() {
   videoElement.setAttribute("width", 360 * aspect);
   videoElement.setAttribute("height", 360);
@@ -611,7 +619,7 @@ async function DANMAKU_SUPER() {
       drawCanvas();
     }
   }, 100);
-}
+}*/
 let list_interval;
 function LIST_COMMENT() {
   COMMENT[0].comments.sort(function (a, b) {
@@ -719,20 +727,20 @@ const COMMENT_CONTROL = (comments) => {
 
 function PREPARE(observe) {
   document
-    .getElementsByClassName("PlayerPanelContainer-tab")[0]
-    .insertAdjacentHTML("beforeend", setting_html);
+    .getElementsByClassName("d_flex flex_column gap_x2")[2]
+    .insertAdjacentHTML("afterbegin", setting_html);
   let customStyle = document.createElement("style");
   customStyle.innerHTML =
-    ".CustomVideoContainer{width: 640px;height: 360px;position: absolute;top: 0;left: 0;}body.is-large:not(.is-fullscreen) .CustomVideoContainer {width: 854px;height: 480px;}body.is-fullscreen .CustomVideoContainer {width: 100vw !important;height: 100vh !important;}@media screen and (min-width: 1286px) and (min-height: 590px){body.is-autoResize:not(.is-fullscreen) .CustomVideoContainer {width: 854px;height: 480px;}@media screen and (min-width: 1392px) and (min-height: 650px){body.is-autoResize:not(.is-fullscreen) .CustomVideoContainer {width: 960px;height: 540px;}} @media screen and (min-width: 1736px) and (min-height: 850px) {body.is-autoResize:not(.is-fullscreen) .CustomVideoContainer {width: 1280px;height: 720px;}}}";
+    ".CustomVideoContainer{width: 100%;height:100%;position: absolute;top: 0;left: 0;}body.is-large:not(.is-fullscreen) .CustomVideoContainer {width: 854px;height: 480px;}body.is-fullscreen .CustomVideoContainer {width: 100vw !important;height: 100vh !important;}@media screen and (min-width: 1286px) and (min-height: 590px){body.is-autoResize:not(.is-fullscreen) .CustomVideoContainer {width: 854px;height: 480px;}@media screen and (min-width: 1392px) and (min-height: 650px){body.is-autoResize:not(.is-fullscreen) .CustomVideoContainer {width: 960px;height: 540px;}} @media screen and (min-width: 1736px) and (min-height: 850px) {body.is-autoResize:not(.is-fullscreen) .CustomVideoContainer {width: 1280px;height: 720px;}}}";
   document.body.appendChild(customStyle);
   CommentRenderer = document.getElementsByClassName("CommentRenderer")[0];
   VideoSymbolContainer = document.getElementsByClassName(
     "VideoSymbolContainer"
   )[0];
-  PlayerContainer = document.getElementsByClassName("PlayerContainer")[0];
-  DefaultVideoContainer = document.getElementsByClassName(
-    "InView VideoContainer"
-  )[0];
+  PlayerContainer = document.querySelector('[data-name="content"]');
+  //DefaultVideoContainer = document.getElementsByClassName(
+  //  "InView VideoContainer"
+  //)[0];
   CustomVideoContainer = document.createElement("div");
   CustomVideoContainer.innerHTML = `<div class="CommentRenderer"><canvas id="zouryouCanvasElement" width="1920" height="1080"></canvas><canvas id="SuperDanmakuCanvasElement" width="640" height="360"></canvas><video id="pipVideoElement"></video></div>`;
   CustomVideoContainer.classList.add("CustomVideoContainer", "InView");
@@ -749,12 +757,12 @@ function PREPARE(observe) {
   SuperDanmakuCanvasElement = document.getElementById(
     "SuperDanmakuCanvasElement"
   );
-  videoElement = document.querySelector("#MainVideoPlayer > video");
+  videoElement = PlayerContainer.children[0];
 
-  let seekBar = document.getElementsByClassName("SeekBar")[0];
-  if (seekBar.classList.contains("is-disabled")) {
-    seekBar.classList.remove("is-disabled");
-  }
+  //let seekBar = document.getElementsByClassName("SeekBar")[0];
+  //if (seekBar.classList.contains("is-disabled")) {
+  //  seekBar.classList.remove("is-disabled");
+  //}
 
   SuperDanmakuCanvasElement.width = 640;
   SuperDanmakuCanvasElement.height = 360;
@@ -1087,11 +1095,11 @@ function PREPARE(observe) {
       document.getElementById("isdebug").checked;
   });
   if (document.getElementById("isauto").checked == true) {
-    setting.style.display = "block";
-    CommentLimit = document.getElementById("auto_num").value;
+    //setting.style.display = "block";
+    //CommentLimit = document.getElementById("auto_num").value;
     //CommentLimit = CommentLimit > 5 ? 5 : CommentLimit;
-    LOADCOMMENT("auto");
-    document.getElementById("zenkomebutton").disabled = true;
+    //LOADCOMMENT("auto");
+    //document.getElementById("zenkomebutton").disabled = true;
   }
   document.getElementById("zenkomebutton").onclick = () => {
     let num = document.getElementById("load_num").value;
@@ -1102,14 +1110,17 @@ function PREPARE(observe) {
   };
   setTimeout(function () {
     function ShowButton() {
+      console.log(1);
       if (document.getElementById("AllCommentViewButton") != undefined) return;
-      let DropDownMenu = document.getElementsByClassName("DropDownMenu")[0];
+      let DropDownMenu = document.getElementsByClassName("d_flex gap_base")[5];
       if (DropDownMenu != undefined) {
-        document.getElementsByClassName("DropDownMenu")[0].insertAdjacentHTML(
-          "afterend",
-          `
-       <div class="ClickInterceptor LoginRequirer is-inline" style="padding-left:-4px">
-        <button data-title="コメントを倍増する" type="button" id="AllCommentViewButton" class="ActionButton ToggleShowOnlyMyCommentsButton">
+        document
+          .getElementsByClassName("d_flex gap_base")[5]
+          .insertAdjacentHTML(
+            "afterbegin",
+            `
+
+        <button style="width: 20px;" data-title="コメントを倍増する" type="button" id="AllCommentViewButton" class="ActionButton ToggleShowOnlyMyCommentsButton">
           <svg viewBox="2 2 20 19.99" xmlns="http://www.w3.org/2000/svg" xmlns:bx="https://boxy-svg.com">
             <defs>
               <style bx:fonts="Candal">@import url(https://fonts.googleapis.com/css2?family=Candal%3Aital%2Cwght%400%2C400&amp;display=swap);</style>
@@ -1118,9 +1129,9 @@ function PREPARE(observe) {
             <text style="fill: rgb(255, 255, 255); font-family: Candal; font-size: 16px; text-transform: capitalize; white-space: pre;" transform="matrix(0.555965, 0, 0, 0.638972, 1.691508, 2.727544)" x="4.192" y="16.413">ALL</text>
           </svg>
         </button>
-       </div>
+
         `
-        );
+          );
         document.getElementById("AllCommentViewButton").addEventListener(
           "click",
           () => {
@@ -1132,9 +1143,8 @@ function PREPARE(observe) {
     }
 
     ShowButton();
-
     document
-      .getElementsByClassName("PlayerPanelContainer-tabItem")[0]
+      .getElementsByClassName("d_flex flex_column gap_x2")[2]
       .addEventListener(
         "click",
         () => {
@@ -1151,7 +1161,7 @@ function PREPARE(observe) {
 
 let index_html = chrome.runtime.getURL("files/setting.html");
 let wave_image = chrome.runtime.getURL("lib/wave.png");
-let logo_image = chrome.runtime.getURL("lib/logo2.png");
+let logo_image = chrome.runtime.getURL("lib/logo4.png");
 let load_image = chrome.runtime.getURL("lib/load.svg");
 let setting_html;
 fetch(index_html)
@@ -1160,9 +1170,9 @@ fetch(index_html)
     setting_html = html;
   });
 const start = setInterval(() => {
-  if (document.getElementsByClassName("DropDownMenu")[0] != undefined) {
+  if (document.getElementsByClassName("d_flex gap_base")[5] != undefined) {
     PREPARE();
     clearInterval(start);
   }
 }, 50);
-console.log("✨コメント増量 v6.4\nCopyright (c) 2022 tanbatu.");
+console.log("✨コメント増量 v7.0\nCopyright (c) 2022 tanbatu.");
