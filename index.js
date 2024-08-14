@@ -23,6 +23,21 @@ let COMMENT = [];
 let CommentLimit = 40;
 
 async function LOADCOMMENT(mode) {
+  const commentRenderers = document.getElementsByClassName("CommentRenderer");
+  if (commentRenderers.length === 0) {
+    PlayerContainer = document.querySelector('[data-name="content"]');
+    const CustomVideoContainer = document.createElement("div");
+    CustomVideoContainer.classList.add("CustomVideoContainer", "InView");
+    CustomVideoContainer.style.cssText =
+      "display: none; z-index: 1; pointer-events: none;";
+    CustomVideoContainer.innerHTML = `<div class="CommentRenderer">
+      <canvas id="zouryou_comment" width="1920" height="1080" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; z-index: 0; display: block; object-fit: contain;"></canvas>
+      <canvas id="SuperDanmakuCanvasElement" width="640" height="360"></canvas>
+      <video id="pipVideoElement"></video>
+    </div>`;
+    PlayerContainer.children[0].after(CustomVideoContainer);
+  }
+
   logger("お待ち下さい");
   loading.style.display = "block";
   document.getElementsByClassName("loadbutton_text")[0].innerText =
@@ -347,10 +362,6 @@ let observer = new MutationObserver(function () {
     href = location.href;
     COMMENT = [];
 
-    //(仮)用の措置
-    document.getElementById("AllCommentViewButton").style.display = "none";
-    document.getElementById("allcommentsetting").style.display = "none";
-    /*
     setTimeout(() => {
       if (document.getElementById("isauto").checked == true) {
         document.getElementById("allcommentsetting").style.display = "block";
@@ -359,7 +370,7 @@ let observer = new MutationObserver(function () {
         LOADCOMMENT("auto");
         document.getElementById("zenkomebutton").disabled = true;
       }
-    }, 1000);*/
+    }, 1000);
   }
 });
 let href = location.href;
@@ -403,6 +414,7 @@ let blob;
 observer.observe(document, { childList: true, subtree: true });
 
 function load_NiconiComments() {
+  console.log(COMMENT);
   niconiComments = new NiconiComments(zouryouCanvasElement, COMMENT, {
     video: document.getElementById("iscanvas").checked
       ? videoElement
@@ -430,6 +442,16 @@ function ADDCOMMENT(val, pos, mail) {
   });
 }
 function PLAYCOMMENT() {
+  document.getElementsByClassName("CustomVideoContainer")[0].style.display =
+    "block";
+  const commentRenderers = document.getElementsByClassName("CommentRenderer");
+  if (commentRenderers.length === 0) {
+    PlayerContainer = document.querySelector('[data-name="content"]');
+    PlayerContainer.children[0].after(CustomVideoContainer);
+  }
+
+  zouryouCanvasElement = document.getElementById("zouryou_comment");
+
   let draw;
   console.log(COMMENT);
   async function setup() {
@@ -469,7 +491,7 @@ function PLAYCOMMENT() {
     DRAW_ = true;
     function draw() {
       niconiComments.drawCanvas(Math.floor(videoElement.currentTime * 100));
-      if (draw == false) return;
+      if (DRAW_ == false) return;
 
       setTimeout(draw, 1000 / document.getElementById("bar_fps").value);
     }
@@ -742,7 +764,7 @@ function PREPARE(observe) {
   //  "InView VideoContainer"
   //)[0];
   CustomVideoContainer = document.createElement("div");
-  CustomVideoContainer.innerHTML = `<div class="CommentRenderer"><canvas id="zouryouCanvasElement" width="1920" height="1080"></canvas><canvas id="SuperDanmakuCanvasElement" width="640" height="360"></canvas><video id="pipVideoElement"></video></div>`;
+  CustomVideoContainer.innerHTML = `<div class="CommentRenderer"><canvas id="zouryou_comment" width="1920" height="1080"></canvas><canvas id="SuperDanmakuCanvasElement" width="640" height="360"></canvas><video id="pipVideoElement"></video></div>`;
   CustomVideoContainer.classList.add("CustomVideoContainer", "InView");
   for (let i = 0; i < 2; i++) {
     document.getElementsByClassName("wave")[
@@ -752,8 +774,9 @@ function PREPARE(observe) {
   }
   document.getElementById("logo").src = logo_image;
   document.getElementById("loading_image").src = load_image;
+
   PlayerContainer.children[0].after(CustomVideoContainer);
-  zouryouCanvasElement = document.getElementById("zouryouCanvasElement");
+  zouryouCanvasElement = document.getElementById("zouryou_comment");
   SuperDanmakuCanvasElement = document.getElementById(
     "SuperDanmakuCanvasElement"
   );
@@ -790,7 +813,7 @@ function PREPARE(observe) {
   pipVideoElement.onpause = () => {
     pipVideoElement.play();
   };
-  zouryouCanvasElement.id = "zouryou_comment";
+
   OLD_DATE = document.getElementById("zenkome-date");
   OLD_TIME = document.getElementById("zenkome-time");
   const setting = document.getElementById("allcommentsetting");
@@ -1095,11 +1118,11 @@ function PREPARE(observe) {
       document.getElementById("isdebug").checked;
   });
   if (document.getElementById("isauto").checked == true) {
-    //setting.style.display = "block";
-    //CommentLimit = document.getElementById("auto_num").value;
-    //CommentLimit = CommentLimit > 5 ? 5 : CommentLimit;
-    //LOADCOMMENT("auto");
-    //document.getElementById("zenkomebutton").disabled = true;
+    setting.style.display = "block";
+    CommentLimit = document.getElementById("auto_num").value;
+    CommentLimit = CommentLimit > 5 ? 5 : CommentLimit;
+    LOADCOMMENT("auto");
+    document.getElementById("zenkomebutton").disabled = true;
   }
   document.getElementById("zenkomebutton").onclick = () => {
     let num = document.getElementById("load_num").value;
@@ -1114,24 +1137,53 @@ function PREPARE(observe) {
       if (document.getElementById("AllCommentViewButton") != undefined) return;
       let DropDownMenu = document.getElementsByClassName("d_flex gap_base")[5];
       if (DropDownMenu != undefined) {
-        document
-          .getElementsByClassName("d_flex gap_base")[5]
-          .insertAdjacentHTML(
-            "afterbegin",
-            `
+        document.getElementById("menu::r9::content").insertAdjacentHTML(
+          "afterbegin",
+          `
+<div
+  data-scope="menu"
+  data-part="item"
+  id="watchLater"
+  role="menuitem"
+  aria-disabled="false"
+  data-ownedby="menu::r9::content"
+  class="[&amp;_:where(button,a)]:d_flex [&amp;_:where(button,a)]:gap_x0_5 [&amp;_:where(button,a)]:items_center [&amp;_:where(button,a)]:w_100% [&amp;_:where(button,a)]:h_x5 [&amp;_:where(button,a)]:px_base [&amp;_:where(button,a)]:rounded_s [&amp;_:where(button,a)]:text_action.textOnBase [&amp;_:where(button,a)]:fill_action.textOnBase [&amp;_:where(button,a)]:[&amp;:hover:not(:disabled)]:bg_action.baseHover [&amp;_:where(button,a)]:[&amp;:disabled,&amp;[aria-disabled=true]]:text_action.textOnBase_disabled [&amp;_:where(button,a)]:[&amp;:disabled,&amp;[aria-disabled=true]]:fill_action.textOnBase_disabled [&amp;_:where(button,a)]:[&amp;_svg]:w_auto [&amp;_:where(button,a)]:[&amp;_svg]:h_x3"
+>
+  <button
+    data-scope="dialog"
+    data-part="trigger"
+    dir="ltr"
+    aria-haspopup="dialog"
+    aria-expanded="false"
+    data-state="closed"
+    class="cursor_pointer"
+    tabindex="0"
+    type="button"
+    data-title="コメントを倍増する"
+    id="AllCommentViewButton"
+  >
+    <svg
+      viewBox="0 0 24 24"
+      xmlns="http://www.w3.org/2000/svg"
+      xmlns:bx="https://boxy-svg.com"
+    >
+      <defs>
+        <style bx:fonts="Candal">
+          @import url(https://fonts.googleapis.com/css2?family=Candal%3Aital%2Cwght%400%2C400&amp;display=swap);
+        </style>
+      </defs>
+      <path
+        d="M6.8 18H3.6c-.9 0-1.6-.7-1.6-1.6V3.6C2 2.7 2.7 2 3.6 2h16.8c.9 0 1.6.7 1.6 1.6v12.8c0 .9-.7 1.6-1.6 1.6h-7.9l-4.2 3.8a1 1 0 01-1 .1.8.8 0 01-.5-.7V18z"
+      />
 
-        <button style="width: 20px;" data-title="コメントを倍増する" type="button" id="AllCommentViewButton" class="ActionButton ToggleShowOnlyMyCommentsButton">
-          <svg viewBox="2 2 20 19.99" xmlns="http://www.w3.org/2000/svg" xmlns:bx="https://boxy-svg.com">
-            <defs>
-              <style bx:fonts="Candal">@import url(https://fonts.googleapis.com/css2?family=Candal%3Aital%2Cwght%400%2C400&amp;display=swap);</style>
-            </defs>
-            <path d="M6.8 18H3.6c-.9 0-1.6-.7-1.6-1.6V3.6C2 2.7 2.7 2 3.6 2h16.8c.9 0 1.6.7 1.6 1.6v12.8c0 .9-.7 1.6-1.6 1.6h-7.9l-4.2 3.8a1 1 0 01-1 .1.8.8 0 01-.5-.7V18z"/>
-            <text style="fill: rgb(255, 255, 255); font-family: Candal; font-size: 16px; text-transform: capitalize; white-space: pre;" transform="matrix(0.555965, 0, 0, 0.638972, 1.691508, 2.727544)" x="4.192" y="16.413">ALL</text>
-          </svg>
-        </button>
+    </svg>
+    コメント増量
+  </button>
+</div>
+
 
         `
-          );
+        );
         document.getElementById("AllCommentViewButton").addEventListener(
           "click",
           () => {
@@ -1143,19 +1195,6 @@ function PREPARE(observe) {
     }
 
     ShowButton();
-    document
-      .getElementsByClassName("d_flex flex_column gap_x2")[2]
-      .addEventListener(
-        "click",
-        () => {
-          if (document.getElementById("AllCommentViewButton") == null) {
-            setTimeout(() => {
-              ShowButton();
-            }, 100);
-          }
-        },
-        false
-      );
   }, 1000);
 }
 
@@ -1175,4 +1214,4 @@ const start = setInterval(() => {
     clearInterval(start);
   }
 }, 50);
-console.log("✨コメント増量 v7.0\nCopyright (c) 2022 tanbatu.");
+console.log("✨コメント増量 v7.2\nCopyright (c) 2022 tanbatu.");
