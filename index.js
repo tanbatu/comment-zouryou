@@ -1137,16 +1137,20 @@ function PREPARE(observe) {
       if (document.getElementById("AllCommentViewButton") != undefined) return;
       let DropDownMenu = document.getElementsByClassName("d_flex gap_base")[5];
       if (DropDownMenu != undefined) {
-        document.getElementById("menu::r9::content").insertAdjacentHTML(
-          "afterbegin",
-          `
+        document
+          .getElementsByClassName(
+            "z_dropdown p_base bg_layer.surfaceHighEm rounded_m ring_none shadow_base"
+          )[0]
+          .insertAdjacentHTML(
+            "afterbegin",
+            `
 <div
   data-scope="menu"
   data-part="item"
   id="watchLater"
   role="menuitem"
   aria-disabled="false"
-  data-ownedby="menu::r9::content"
+  data-ownedby="menu::rh::content"
   class="[&amp;_:where(button,a)]:d_flex [&amp;_:where(button,a)]:gap_x0_5 [&amp;_:where(button,a)]:items_center [&amp;_:where(button,a)]:w_100% [&amp;_:where(button,a)]:h_x5 [&amp;_:where(button,a)]:px_base [&amp;_:where(button,a)]:rounded_s [&amp;_:where(button,a)]:text_action.textOnBase [&amp;_:where(button,a)]:fill_action.textOnBase [&amp;_:where(button,a)]:[&amp;:hover:not(:disabled)]:bg_action.baseHover [&amp;_:where(button,a)]:[&amp;:disabled,&amp;[aria-disabled=true]]:text_action.textOnBase_disabled [&amp;_:where(button,a)]:[&amp;:disabled,&amp;[aria-disabled=true]]:fill_action.textOnBase_disabled [&amp;_:where(button,a)]:[&amp;_svg]:w_auto [&amp;_:where(button,a)]:[&amp;_svg]:h_x3"
 >
   <button
@@ -1183,7 +1187,7 @@ function PREPARE(observe) {
 
 
         `
-        );
+          );
         document.getElementById("AllCommentViewButton").addEventListener(
           "click",
           () => {
@@ -1214,4 +1218,4 @@ const start = setInterval(() => {
     clearInterval(start);
   }
 }, 50);
-console.log("✨コメント増量 v7.2\nCopyright (c) 2022 tanbatu.");
+console.log("✨コメント増量 v7.3\nCopyright (c) 2022 tanbatu.");
