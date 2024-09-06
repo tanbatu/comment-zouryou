@@ -46,7 +46,10 @@ async function LOADCOMMENT(mode) {
     FailCount = 0;
   const parser = new DOMParser();
 
-  const match = location.href.match(/\/watch\/(sm\d+)/);
+  let match = location.href.match(/\/watch\/(sm\d+)/);
+  if (match === null) {
+    match = location.href.match(/\/watch\/(so\d+)/);
+  }
 
   const req = await fetch(
     "https://www.nicovideo.jp/watch/" + match[1] + "?responseType=json"
@@ -842,7 +845,8 @@ function PREPARE(observe) {
     xml,
     ngscore,
     nicoru_limit,
-    premium_filter;
+    premium_filter,
+    version;
   function CONFIG() {
     get_zouryou_config = localStorage.getItem("zouryou_config");
     if (get_zouryou_config == null || get_zouryou_config == "[null]") {
@@ -863,6 +867,7 @@ function PREPARE(observe) {
           ngscore: "-Infinity",
           nicoru_limit: 0,
           premium_filter: false,
+          version: "7.3.1",
         })
       );
     } else {
@@ -1131,63 +1136,21 @@ function PREPARE(observe) {
 
     LOADCOMMENT();
   };
+
   setTimeout(function () {
     function ShowButton() {
       console.log(1);
       if (document.getElementById("AllCommentViewButton") != undefined) return;
-      let DropDownMenu = document.getElementsByClassName("d_flex gap_base")[5];
+      let DropDownMenu = document.getElementById("toggleMenu");
       if (DropDownMenu != undefined) {
-        document
-          .getElementsByClassName(
-            "z_dropdown p_base bg_layer.surfaceHighEm rounded_m ring_none shadow_base"
-          )[0]
-          .insertAdjacentHTML(
-            "afterbegin",
-            `
-<div
-  data-scope="menu"
-  data-part="item"
-  id="watchLater"
-  role="menuitem"
-  aria-disabled="false"
-  data-ownedby="menu::rh::content"
-  class="[&amp;_:where(button,a)]:d_flex [&amp;_:where(button,a)]:gap_x0_5 [&amp;_:where(button,a)]:items_center [&amp;_:where(button,a)]:w_100% [&amp;_:where(button,a)]:h_x5 [&amp;_:where(button,a)]:px_base [&amp;_:where(button,a)]:rounded_s [&amp;_:where(button,a)]:text_action.textOnBase [&amp;_:where(button,a)]:fill_action.textOnBase [&amp;_:where(button,a)]:[&amp;:hover:not(:disabled)]:bg_action.baseHover [&amp;_:where(button,a)]:[&amp;:disabled,&amp;[aria-disabled=true]]:text_action.textOnBase_disabled [&amp;_:where(button,a)]:[&amp;:disabled,&amp;[aria-disabled=true]]:fill_action.textOnBase_disabled [&amp;_:where(button,a)]:[&amp;_svg]:w_auto [&amp;_:where(button,a)]:[&amp;_svg]:h_x3"
->
-  <button
-    data-scope="dialog"
-    data-part="trigger"
-    dir="ltr"
-    aria-haspopup="dialog"
-    aria-expanded="false"
-    data-state="closed"
-    class="cursor_pointer"
-    tabindex="0"
-    type="button"
-    data-title="コメントを倍増する"
-    id="AllCommentViewButton"
-  >
-    <svg
-      viewBox="0 0 24 24"
-      xmlns="http://www.w3.org/2000/svg"
-      xmlns:bx="https://boxy-svg.com"
-    >
-      <defs>
-        <style bx:fonts="Candal">
-          @import url(https://fonts.googleapis.com/css2?family=Candal%3Aital%2Cwght%400%2C400&amp;display=swap);
-        </style>
-      </defs>
-      <path
-        d="M6.8 18H3.6c-.9 0-1.6-.7-1.6-1.6V3.6C2 2.7 2.7 2 3.6 2h16.8c.9 0 1.6.7 1.6 1.6v12.8c0 .9-.7 1.6-1.6 1.6h-7.9l-4.2 3.8a1 1 0 01-1 .1.8.8 0 01-.5-.7V18z"
-      />
-
-    </svg>
-    コメント増量
-  </button>
-</div>
-
-
+        document.querySelector("[aria-label='設定']").insertAdjacentHTML(
+          "beforebegin",
+          `
+          <button aria-label="コメント増量" style="width:26px;color:white" data-scope="tooltip" data-part="trigger" id="AllCommentViewButton" dir="ltr" data-state="closed" class="cursor_pointer" type="button" tabindex="0" title="コメント増量">
+          ALL
+          </button> 
         `
-          );
+        );
         document.getElementById("AllCommentViewButton").addEventListener(
           "click",
           () => {
@@ -1218,4 +1181,4 @@ const start = setInterval(() => {
     clearInterval(start);
   }
 }, 50);
-console.log("✨コメント増量 v7.3\nCopyright (c) 2022 tanbatu.");
+console.log("✨コメント増量 v7.3.1\nCopyright (c) 2022 tanbatu.");
