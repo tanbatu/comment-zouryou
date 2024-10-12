@@ -477,7 +477,7 @@ function PLAYCOMMENT() {
     link.style.visibility = "visible";
     link.href = URL.createObjectURL(blob);
 
-    videoElement = PlayerContainer.children[0];
+    videoElement = document.querySelector('[data-name="video-content"]');
     aspect = Number(videoElement.videoWidth) / Number(videoElement.videoHeight);
     console.log(aspect);
 
@@ -532,21 +532,22 @@ function PLAYCOMMENT() {
       comment_list_active = false;
     });
   LIST_COMMENT();
-
-  // let Comment_Show_Button = document.getElementsByClassName(
-  //   "ActionButton ControllerButton CommentOnOffButton"
-  // )[0];
-  //
-  // let Comment_SH = new MutationObserver(function () {
-  //   CustomVideoContainer.style.zIndex =
-  //     document.getElementsByClassName(
-  //       "ActionButton ControllerButton CommentOnOffButton"
-  //     )[0].children[0].children[0].className.baseVal ==
-  //     "CommentOnOffButton-iconShow"
-  //       ? 0
-  //       : 1;
-  // });
-  // Comment_SH.observe(Comment_Show_Button, { childList: true, subtree: true });
+  let Comment_Show_Button = document.querySelector(
+    "[aria-label='コメントを非表示にする']"
+  );
+  if (Comment_Show_Button == undefined) {
+    Comment_Show_Button = document.querySelector(
+      "[aria-label='コメントを表示する']"
+    );
+  }
+  let Comment_SH = new MutationObserver(function () {
+    console.log(Comment_Show_Button.getAttribute("data-state"));
+    CustomVideoContainer.style.zIndex =
+      Comment_Show_Button.getAttribute("aria-label") == "コメントを表示する"
+        ? 0
+        : 1;
+  });
+  Comment_SH.observe(Comment_Show_Button, { childList: true, subtree: true });
   pipVideoElement.style.display = document.getElementById("iscanvas").checked
     ? "block"
     : "none";
@@ -778,13 +779,14 @@ function PREPARE(observe) {
   document.getElementById("logo").src = logo_image;
   document.getElementById("loading_image").src = load_image;
 
-  PlayerContainer.children[0].after(CustomVideoContainer);
+  document
+    .querySelector('[data-name="video-content"]')
+    .after(CustomVideoContainer);
   zouryouCanvasElement = document.getElementById("zouryou_comment");
   SuperDanmakuCanvasElement = document.getElementById(
     "SuperDanmakuCanvasElement"
   );
-  videoElement = PlayerContainer.children[0];
-
+  videoElement = document.querySelector('[data-name="video-content"]');
   //let seekBar = document.getElementsByClassName("SeekBar")[0];
   //if (seekBar.classList.contains("is-disabled")) {
   //  seekBar.classList.remove("is-disabled");
@@ -867,7 +869,7 @@ function PREPARE(observe) {
           ngscore: "-Infinity",
           nicoru_limit: 0,
           premium_filter: false,
-          version: "7.3.1",
+          version: "7.3.3",
         })
       );
     } else {
@@ -1181,4 +1183,4 @@ const start = setInterval(() => {
     clearInterval(start);
   }
 }, 50);
-console.log("✨コメント増量 v7.3.1\nCopyright (c) 2022 tanbatu.");
+console.log("✨コメント増量 v7.3.3\nCopyright (c) 2022 tanbatu.");
