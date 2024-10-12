@@ -1,8 +1,10 @@
 {
+  "update_url": "https://clients2.google.com/service/update2/crx",
+
   "manifest_version": 3,
   "name": "コメント増量",
   "description": "ニコニコ動画のコメントの表示量を増やす",
-  "version": "7.3.1",
+  "version": "7.3.3",
   "content_scripts": [
     {
       "matches": [
