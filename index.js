@@ -680,7 +680,7 @@ function LIST_COMMENT() {
           .prepend(commentElement);
       }
     }
-  }, 30);
+  }, 50);
 }
 
 const logger = (msg, load) => {
@@ -1139,12 +1139,30 @@ function PREPARE(observe) {
     LOADCOMMENT();
   };
 
+  ////
+  let fullScreenButton = document.querySelector(
+    "[aria-label='全画面表示する']"
+  );
+  if (fullScreenButton == undefined) {
+    fullScreenButton = document.querySelector(
+      "[aria-label='全画面表示を終了']"
+    );
+  }
+  let fullScreen = new MutationObserver(function () {
+    console.log(fullScreenButton.getAttribute("data-state"));
+    document.getElementById("allcommentsetting").style.visibility =
+      fullScreenButton.getAttribute("aria-label") == "全画面表示する"
+        ? "visible"
+        : "hidden";
+  });
+  fullScreen.observe(fullScreenButton, { childList: true, subtree: true });
+
   setTimeout(function () {
     function ShowButton() {
       console.log(1);
       if (document.getElementById("AllCommentViewButton") != undefined) return;
-      let DropDownMenu = document.getElementById("toggleMenu");
-      if (DropDownMenu != undefined) {
+      let settingButton = document.querySelector("[aria-label='設定']");
+      if (settingButton != undefined) {
         document.querySelector("[aria-label='設定']").insertAdjacentHTML(
           "beforebegin",
           `
@@ -1183,4 +1201,4 @@ const start = setInterval(() => {
     clearInterval(start);
   }
 }, 50);
-console.log("✨コメント増量 v7.3.3\nCopyright (c) 2022 tanbatu.");
+console.log("✨コメント増量 v7.4\nCopyright (c) 2022 tanbatu.");
