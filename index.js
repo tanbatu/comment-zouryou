@@ -458,6 +458,8 @@ function PLAYCOMMENT() {
   let draw;
   console.log(COMMENT);
   async function setup() {
+    let lastTimestamp = 0;
+    const fpsInterval = 1000 / document.getElementById("bar_fps").value;
     //DefaultVideoContainer.style.display = "block";
 
     if (document.getElementById("isxml").checked) {
@@ -492,14 +494,17 @@ function PLAYCOMMENT() {
     console.log(niconiComments);
 
     DRAW_ = true;
-    function draw() {
-      niconiComments.drawCanvas(Math.floor(videoElement.currentTime * 100));
-      if (DRAW_ == false) return;
-
-      setTimeout(draw, 1000 / document.getElementById("bar_fps").value);
+    function draw(timestamp) {
+      if (DRAW_ === false) return;
+      const elapsed = timestamp - lastTimestamp;
+      if (elapsed >= fpsInterval) {
+        lastTimestamp = timestamp - (elapsed % fpsInterval);
+        niconiComments.drawCanvas(Math.floor(videoElement.currentTime * 100));
+      }
+      requestAnimationFrame(draw);
     }
-    draw();
-
+    requestAnimationFrame(draw);
+    
     console.log(videoElement);
     document.querySelector('[data-name="comment"]').style.display = "none";
     //document.getElementsByClassName("CommentRenderer")[0].style.display =
