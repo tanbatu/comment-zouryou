@@ -22,7 +22,7 @@ let CommentRenderer,
 let COMMENT = [];
 let CommentLimit = 40;
 
-async function LOADCOMMENT(mode) {
+async function LOADCOMMENT_LEGACY(mode) {
   const commentRenderers = document.getElementsByClassName("CommentRenderer");
   if (commentRenderers.length === 0) {
     PlayerContainer = document.querySelector('[data-name="content"]');
@@ -339,39 +339,297 @@ async function LOADCOMMENT(mode) {
   PLAYCOMMENT();
 }
 
+async function LOADCOMMENT(mode) {
+  const zenkomeButton = document.getElementById("zenkomebutton");
+  const pageLimit = Math.max(1, Number(CommentLimit) || 1);
+
+  try {
+    logger("お待ち下さい");
+    loading.style.display = "block";
+    document.getElementsByClassName("loadbutton_text")[0].innerText =
+      "読み込み中";
+
+    const videoId = NicoCommentApi.extractVideoId(location.href);
+    if (!videoId) {
+      throw new Error("動画 ID の取得に失敗しました");
+    }
+
+    const watchUrl = new URL(`/watch/${videoId}`, location.origin);
+    watchUrl.searchParams.set("responseType", "json");
+    const watchResponse = await fetch(watchUrl, { credentials: "include" });
+    if (!watchResponse.ok) {
+      throw new Error(`動画情報の取得に失敗しました (${watchResponse.status})`);
+    }
+    apiData = (await watchResponse.json())?.data?.response;
+
+    const nvComment = apiData?.comment?.nvComment;
+    const targets = nvComment?.params?.targets;
+    if (!nvComment?.server || !Array.isArray(targets) || targets.length === 0) {
+      throw new Error("現行コメント API の情報が見つかりません");
+    }
+
+    const date =
+      OLD_DATE?.value === ""
+        ? new Date()
+        : new Date(`${OLD_DATE.value} ${OLD_TIME.value}`);
+    const startCursor = Math.floor(date.getTime() / 1000);
+    const ownerComments = [];
+    const comments = [];
+    const activeTargets = targets.filter(
+      (target) =>
+        !(
+          (document.getElementById("iseasy")?.checked || mode === "auto") &&
+          target.fork === "easy"
+        )
+    );
+    const totalPages = Math.max(1, activeTargets.length * pageLimit);
+    let completedPages = 0;
+
+    const updateProgress = () => {
+      const progress = document.getElementById("progress_left");
+      if (progress) {
+        progress.style.width = `${100 - (completedPages / totalPages) * 100}%`;
+      }
+    };
+
+    const refreshThreadKey = async () => {
+      const keyUrl = new URL(
+        "https://nvapi.nicovideo.jp/v1/comment/keys/thread"
+      );
+      keyUrl.searchParams.set("videoId", apiData.video.id || videoId);
+      keyUrl.searchParams.set("_frontendId", "6");
+      const keyResponse = await fetch(keyUrl, {
+        credentials: "include",
+        headers: {
+          "X-Frontend-Id": "6",
+          "X-Frontend-Version": "0",
+          "Content-Type": "application/json",
+        },
+      });
+      if (!keyResponse.ok) {
+        throw new Error(`thread key の取得に失敗しました (${keyResponse.status})`);
+      }
+      const key = (await keyResponse.json())?.data?.threadKey;
+      if (!key) throw new Error("thread key がレスポンスにありません");
+      nvComment.threadKey = key;
+    };
+
+    const requestThread = async (target, additionals) => {
+      let refreshed = false;
+      while (true) {
+        const response = await fetch(`${nvComment.server}/v1/threads`, {
+          method: "POST",
+          headers: {
+            "content-type": "text/plain;charset=UTF-8",
+            "x-client-os-type": "others",
+            "x-frontend-id": "6",
+            "x-frontend-version": "0",
+          },
+          body: JSON.stringify(
+            NicoCommentApi.buildThreadRequest(nvComment, target, additionals)
+          ),
+        });
+        let payload;
+        try {
+          payload = await response.json();
+        } catch (error) {
+          const invalidResponse = new Error("コメント API の応答を解釈できません");
+          invalidResponse.code = `HTTP_${response.status}`;
+          throw invalidResponse;
+        }
+
+        const errorCode = NicoCommentApi.getApiErrorCode(
+          payload,
+          response.status
+        );
+        if (errorCode === "TOO_MANY_REQUESTS" || errorCode === "HTTP_429") {
+          logger("コメント API の制限中です。60秒待ちます。");
+          await sleep(60000);
+          continue;
+        }
+        if (errorCode === "EXPIRED_TOKEN" && !refreshed) {
+          logger("thread key を更新しています…");
+          await refreshThreadKey();
+          refreshed = true;
+          continue;
+        }
+        if (errorCode || !payload?.data) {
+          const apiError = new Error(
+            `コメント API がエラーを返しました (${errorCode || "UNKNOWN"})`
+          );
+          apiError.code = errorCode || "UNKNOWN";
+          throw apiError;
+        }
+        return payload;
+      }
+    };
+
+    logger(
+      `${activeTargets.length}スレッドをそれぞれ${pageLimit}回読み込みます。`
+    );
+
+    for (const target of activeTargets) {
+      let cursor = startCursor;
+      let historical = true;
+      let previousPage = [];
+      for (let page = 0; page < pageLimit; page++) {
+        const additionals = historical
+          ? { res_from: -1000, when: cursor }
+          : {};
+        let response;
+        try {
+          response = await requestThread(target, additionals);
+        } catch (error) {
+          if (
+            historical &&
+            (error.code === "INVALID_TOKEN" || error.code === "HTTP_400")
+          ) {
+            historical = false;
+            previousPage = [];
+            page--;
+            logger("ログアウト状態のため、取得可能な最新コメントを読み込みます。");
+            continue;
+          }
+          throw error;
+        }
+
+        const pageComments = NicoCommentApi.getThreadComments(
+          response,
+          target.fork
+        );
+        if (pageComments.length === 0) break;
+        if (
+          historical &&
+          previousPage.length > 0 &&
+          !NicoCommentApi.hasPageProgress(previousPage, pageComments)
+        ) {
+          break;
+        }
+
+        if (target.fork === "owner") {
+          ownerComments.push(
+            ...NicoCommentApi.mergeUniqueComments(ownerComments, pageComments).slice(
+              ownerComments.length
+            )
+          );
+        } else {
+          comments.push(
+            ...NicoCommentApi.mergeUniqueComments(comments, pageComments).slice(
+              comments.length
+            )
+          );
+        }
+
+        completedPages++;
+        updateProgress();
+        logger(
+          `[${completedPages}/${totalPages}]: コメ番${
+            pageComments[0]?.no ?? "?"
+          }まで読み込みました`
+        );
+
+        if (!historical || pageComments[0]?.no <= 1) break;
+        const oldestAt = Date.parse(pageComments[0]?.postedAt);
+        const nextCursor = Math.floor(oldestAt / 1000);
+        if (!Number.isFinite(nextCursor) || nextCursor >= cursor) break;
+        cursor = nextCursor;
+        previousPage = pageComments;
+
+        if (pageLimit > 20 && !NG_LIST_COMMAND.includes("speedmode")) {
+          await sleep(1000);
+        }
+      }
+    }
+
+    CommentLoadingScreenWrapper.style.background = "rgba(0, 0, 0, .9)";
+    logger(`${comments.length}件のコメントを読み込みました`);
+    logger("NG設定を適用しています");
+
+    COMMENT.length = 0;
+    COMMENT.push(
+      {
+        commentCount: comments.length,
+        comments: await COMMENT_CONTROL(comments),
+        fork: "comment-zouryou",
+        id: 0,
+      },
+      {
+        commentCount: ownerComments.length,
+        comments: ownerComments,
+        fork: "owner",
+        id: 1,
+      }
+    );
+    document.getElementById("reload_niconicomments").onclick = async () => {
+      COMMENT[0].comments = await COMMENT_CONTROL(comments);
+      COMMENT[0].commentCount = comments.length;
+      load_NiconiComments();
+      clearInterval(list_interval);
+      LIST_COMMENT();
+    };
+
+    logger("描画準備中");
+    if (zenkomeButton) zenkomeButton.disabled = false;
+    document.getElementById("progress_left").style.width = "0%";
+    PLAYCOMMENT();
+  } catch (error) {
+    console.error("[コメント増量] コメント取得エラー", error);
+    logger(`コメントの取得に失敗しました: ${error.message}`);
+    if (loading) loading.style.display = "none";
+    if (zenkomeButton) zenkomeButton.disabled = false;
+  }
+}
+
 let niconiComments, comment_list_active;
 let observer = new MutationObserver(function () {
   if (href.split("?")[0] !== location.href.split("?")[0]) {
-    document.getElementById("loaded").style.zIndex = "0";
-    document.getElementById("wrapper_buttons").style.height = "0px";
-    document.getElementById("wrapper_buttons").style.opacity = "0";
-    document.getElementsByClassName("scroll")[0].style.height =
-      "calc(100% - 171px)";
     DRAW_ = false;
-    document.getElementsByClassName("CommentRenderer")[0].style.display =
-      "block";
-    CustomVideoContainer.style.display = "none";
-    //DefaultVideoContainer.style.display = "block";
-    LoadedCommentCount = 1;
-    link.style.visibility = "hidden";
-    //CommentLoadingScreen.innerHTML = "";
-    document.getElementById("loaded").style.visibility = "hidden";
-    document.getElementById("zenkomebutton").disabled = false;
-    pipVideoElement.style.display = "none";
-    document.getElementById("reload_niconicomments").disabled = true;
-    document.getElementsByClassName("loadbutton_text")[0].innerText =
-      "読み込み開始！";
-    document.getElementById("progress_left").style.width = "100%";
+    clearInterval(list_interval);
+    const loaded = document.getElementById("loaded");
+    if (loaded) {
+      loaded.style.zIndex = "0";
+      loaded.style.visibility = "hidden";
+    }
+    const wrapperButtons = document.getElementById("wrapper_buttons");
+    if (wrapperButtons) {
+      wrapperButtons.style.height = "0px";
+      wrapperButtons.style.opacity = "0";
+    }
+    const scroll = document.getElementsByClassName("scroll")[0];
+    if (scroll) scroll.style.height = "calc(100% - 171px)";
+    const nativeRenderer = document.getElementsByClassName("CommentRenderer")[0];
+    if (nativeRenderer) nativeRenderer.style.display = "block";
+    if (CustomVideoContainer) CustomVideoContainer.style.display = "none";
+    if (link) link.style.visibility = "hidden";
+    const button = document.getElementById("zenkomebutton");
+    if (button) button.disabled = false;
+    if (pipVideoElement) {
+      pipVideoElement.pause();
+      pipVideoElement.style.display = "none";
+    }
+    if (CustomVideoContainer) CustomVideoContainer.remove();
+    document.getElementById("allcommentsetting")?.remove();
+    CustomVideoContainer = null;
+    CommentLoadingScreenWrapper = null;
+    const reloadButton = document.getElementById("reload_niconicomments");
+    if (reloadButton) reloadButton.disabled = true;
+    const loadButtonText = document.getElementsByClassName("loadbutton_text")[0];
+    if (loadButtonText) loadButtonText.innerText = "読み込み開始！";
+    const progress = document.getElementById("progress_left");
+    if (progress) progress.style.width = "100%";
     href = location.href;
     COMMENT = [];
+    startPreparePolling();
 
     setTimeout(() => {
-      if (document.getElementById("isauto").checked == true) {
-        document.getElementById("allcommentsetting").style.display = "block";
+      const auto = document.getElementById("isauto");
+      const setting = document.getElementById("allcommentsetting");
+      if (auto?.checked === true && setting) {
+        setting.style.display = "block";
         CommentLimit = document.getElementById("auto_num").value;
         //CommentLimit = CommentLimit > 5 ? 5 : CommentLimit;
         LOADCOMMENT("auto");
-        document.getElementById("zenkomebutton").disabled = true;
+        if (button) button.disabled = true;
       }
     }, 1000);
   }
@@ -445,8 +703,11 @@ function ADDCOMMENT(val, pos, mail) {
   });
 }
 function PLAYCOMMENT() {
-  document.getElementsByClassName("CustomVideoContainer")[0].style.display =
-    "block";
+  const customContainer = document.getElementsByClassName(
+    "CustomVideoContainer"
+  )[0];
+  if (!customContainer) return;
+  customContainer.style.display = "block";
   const commentRenderers = document.getElementsByClassName("CommentRenderer");
   if (commentRenderers.length === 0) {
     PlayerContainer = document.querySelector('[data-name="content"]');
@@ -477,8 +738,15 @@ function PLAYCOMMENT() {
     link.style.visibility = "visible";
     link.href = URL.createObjectURL(blob);
 
-    videoElement = document.querySelector('[data-name="video-content"]');
-    aspect = Number(videoElement.videoWidth) / Number(videoElement.videoHeight);
+    const currentPlayer = NicoCommentApi.findPlayerElements(document);
+    videoElement =
+      currentPlayer?.nativeVideo ||
+      document.querySelector('video:not([title="Advertisement"])');
+    const width = Number(videoElement?.videoWidth) ||
+      Number(currentPlayer?.stage?.clientWidth);
+    const height = Number(videoElement?.videoHeight) ||
+      Number(currentPlayer?.stage?.clientHeight);
+    aspect = width > 0 && height > 0 ? width / height : 16 / 9;
     console.log(aspect);
 
     zouryouCanvasElement.style.opacity =
@@ -493,7 +761,21 @@ function PLAYCOMMENT() {
 
     DRAW_ = true;
     function draw() {
-      niconiComments.drawCanvas(Math.floor(videoElement.currentTime * 100));
+      if (
+        !videoElement ||
+        !videoElement.isConnected ||
+        videoElement.title === "Advertisement"
+      ) {
+        videoElement =
+          NicoCommentApi.findPlayerElements(document)?.nativeVideo ||
+          document.querySelector('video:not([title="Advertisement"])');
+        if (document.getElementById("iscanvas").checked) {
+          niconiComments.video = videoElement || undefined;
+        }
+      }
+      niconiComments.drawCanvas(
+        Math.floor((videoElement?.currentTime || 0) * 100)
+      );
       if (DRAW_ == false) return;
 
       setTimeout(draw, 1000 / document.getElementById("bar_fps").value);
@@ -501,13 +783,15 @@ function PLAYCOMMENT() {
     draw();
 
     console.log(videoElement);
-    document.querySelector('[data-name="comment"]').style.display = "none";
+    const nativeComment = document.querySelector('[data-name="comment"]');
+    if (nativeComment) nativeComment.style.display = "none";
     //document.getElementsByClassName("CommentRenderer")[0].style.display =
     //  "none";
     //
     pipVideoElement.srcObject = zouryouCanvasElement.captureStream(60);
     pipVideoElement.muted = true;
-    pipVideoElement.play();
+    pipVideoElement.volume = 0;
+    pipVideoElement.play().catch(() => {});
 
     //void DANMAKU_SUPER();
     setTimeout(() => {
@@ -540,14 +824,15 @@ function PLAYCOMMENT() {
       "[aria-label='コメントを表示する']"
     );
   }
-  let Comment_SH = new MutationObserver(function () {
-    console.log(Comment_Show_Button.getAttribute("data-state"));
-    CustomVideoContainer.style.zIndex =
-      Comment_Show_Button.getAttribute("aria-label") == "コメントを表示する"
-        ? 0
-        : 1;
-  });
-  Comment_SH.observe(Comment_Show_Button, { childList: true, subtree: true });
+  if (Comment_Show_Button) {
+    let Comment_SH = new MutationObserver(function () {
+      CustomVideoContainer.style.zIndex =
+        Comment_Show_Button.getAttribute("aria-label") == "コメントを表示する"
+          ? 0
+          : 1;
+    });
+    Comment_SH.observe(Comment_Show_Button, { childList: true, subtree: true });
+  }
   pipVideoElement.style.display = document.getElementById("iscanvas").checked
     ? "block"
     : "none";
@@ -752,41 +1037,46 @@ const COMMENT_CONTROL = (comments) => {
 };
 
 function PREPARE(observe) {
-  document
-    .getElementsByClassName("grid-area_[sidebar]")[0]
-    .insertAdjacentHTML("afterbegin", setting_html);
+  if (document.getElementById("allcommentsetting")) return false;
+  const playerElements = NicoCommentApi.findPlayerElements(document);
+  const settingsMount = NicoCommentApi.findSettingsMount(document);
+  if (!playerElements || !settingsMount || typeof setting_html !== "string") {
+    return false;
+  }
+  settingsMount.insertAdjacentHTML("afterbegin", setting_html);
   let customStyle = document.createElement("style");
   customStyle.innerHTML =
-    ".CustomVideoContainer{width: 100%;height:100%;position: absolute;top: 0;left: 0;}body.is-large:not(.is-fullscreen) .CustomVideoContainer {width: 854px;height: 480px;}body.is-fullscreen .CustomVideoContainer {width: 100vw !important;height: 100vh !important;}@media screen and (min-width: 1286px) and (min-height: 590px){body.is-autoResize:not(.is-fullscreen) .CustomVideoContainer {width: 854px;height: 480px;}@media screen and (min-width: 1392px) and (min-height: 650px){body.is-autoResize:not(.is-fullscreen) .CustomVideoContainer {width: 960px;height: 540px;}} @media screen and (min-width: 1736px) and (min-height: 850px) {body.is-autoResize:not(.is-fullscreen) .CustomVideoContainer {width: 1280px;height: 720px;}}}";
+    ".CustomVideoContainer{position:absolute;inset:0;width:100%;height:100%;pointer-events:none;}[data-name=\"content\"],[data-styling-name=\"fullscreen-target\"]{position:relative;}";
   document.body.appendChild(customStyle);
   CommentRenderer = document.getElementsByClassName("CommentRenderer")[0];
   VideoSymbolContainer = document.getElementsByClassName(
     "VideoSymbolContainer"
   )[0];
-  PlayerContainer = document.querySelector('[data-name="content"]');
+  PlayerContainer = playerElements.content;
   //DefaultVideoContainer = document.getElementsByClassName(
   //  "InView VideoContainer"
   //)[0];
   CustomVideoContainer = document.createElement("div");
+  CustomVideoContainer.id = "comment-zouryou-overlay";
   CustomVideoContainer.innerHTML = `<div class="CommentRenderer"><canvas id="zouryou_comment" width="1920" height="1080"></canvas><canvas id="SuperDanmakuCanvasElement" width="640" height="360"></canvas><video id="pipVideoElement"></video></div>`;
   CustomVideoContainer.classList.add("CustomVideoContainer", "InView");
-  for (let i = 0; i < 2; i++) {
-    document.getElementsByClassName("wave")[
-      i
-    ].style = `background:url(${wave_image});
-      background-size: 1000px 50px;`;
+  for (const wave of document.getElementsByClassName("wave")) {
+    wave.style.background = `url(${wave_image})`;
+    wave.style.backgroundSize = "1000px 50px";
   }
-  document.getElementById("logo").src = logo_image;
-  document.getElementById("loading_image").src = load_image;
+  const logo = document.getElementById("logo");
+  if (logo) logo.src = logo_image;
+  const loadingImage = document.getElementById("loading_image");
+  if (loadingImage) loadingImage.src = load_image;
 
-  document
-    .querySelector('[data-name="video-content"]')
-    .after(CustomVideoContainer);
+  playerElements.video.after(CustomVideoContainer);
   zouryouCanvasElement = document.getElementById("zouryou_comment");
   SuperDanmakuCanvasElement = document.getElementById(
     "SuperDanmakuCanvasElement"
   );
-  videoElement = document.querySelector('[data-name="video-content"]');
+  videoElement =
+    playerElements.nativeVideo ||
+    document.querySelector('video:not([title="Advertisement"])');
   //let seekBar = document.getElementsByClassName("SeekBar")[0];
   //if (seekBar.classList.contains("is-disabled")) {
   //  seekBar.classList.remove("is-disabled");
@@ -815,8 +1105,12 @@ function PREPARE(observe) {
     "position:absolute;top:0;left:0;width:100%;height:100%;z-index:1;display:block;opacity:0;";
   pipVideoElement.style =
     "position:absolute;top:0;left:0;width:100%;height:100%;z-index:1;pointer-events:all;display:none";
+  pipVideoElement.muted = true;
+  pipVideoElement.volume = 0;
   pipVideoElement.onpause = () => {
-    pipVideoElement.play();
+    pipVideoElement.muted = true;
+    pipVideoElement.volume = 0;
+    pipVideoElement.play().catch(() => {});
   };
 
   OLD_DATE = document.getElementById("zenkome-date");
@@ -844,6 +1138,7 @@ function PREPARE(observe) {
     pip,
     keepCA,
     auto,
+    auto_num,
     xml,
     ngscore,
     nicoru_limit,
@@ -851,59 +1146,66 @@ function PREPARE(observe) {
     version;
   function CONFIG() {
     get_zouryou_config = localStorage.getItem("zouryou_config");
-    if (get_zouryou_config == null || get_zouryou_config == "[null]") {
-      localStorage.setItem(
-        "zouryou_config",
-        JSON.stringify({
-          num: 5,
-          bar_textsize: 100,
-          bar_stroke: 0.35,
-          bar_alpha: 100,
-          bar_fps: 30,
-          keepCA: false,
-          mode: "html5",
-          pip: false,
-          auto: false,
-          auto_num: 2,
-          xml: false,
-          ngscore: "-Infinity",
-          nicoru_limit: 0,
-          premium_filter: false,
-          version: "7.3.3",
-        })
-      );
-    } else {
-      zouryou_config = JSON.parse(get_zouryou_config);
-      comment_num = document.getElementById("load_num");
-      comment_size = document.getElementById("bar_textsize");
-      stroke_opacity = document.getElementById("bar_stroke");
-      comment_opacity = document.getElementById("bar_alpha");
-      fps = document.getElementById("bar_fps");
-      pip = document.getElementById("iscanvas");
-      keepCA = document.getElementById("checkbox4");
-      auto = document.getElementById("isauto");
-      auto_num = document.getElementById("auto_num");
-      xml = document.getElementById("isxml");
-      ngscore = document.getElementById("ng_score");
-      nicoru_limit = document.getElementById("nicoru_num");
-      premium_filter = document.getElementById("premium_filter");
-      comment_num.value = zouryou_config.num;
-      comment_size.value = zouryou_config.bar_textsize;
-      stroke_opacity.value = zouryou_config.bar_stroke;
-      comment_opacity.value = zouryou_config.bar_alpha;
-      pip.checked = zouryou_config.pip;
-      keepCA.checked = zouryou_config.keepCA;
-      auto.checked = zouryou_config.auto;
-      fps.value = zouryou_config.bar_fps;
-      auto_num.value = zouryou_config.auto_num;
-      xml.checked = zouryou_config.xml;
-      nicoru_limit.value = zouryou_config.nicoru_limit || 0;
-      premium_filter.checked = zouryou_config.premium_filter || false;
-      ngscore.value = zouryou_config.ngscore || "-Infinity";
-      for (let i = 0; i < val_stroke.length; i++) {
-        val_stroke[i].innerText = bar_stroke[i].value;
-      }
+    const defaults = {
+      num: 5,
+      bar_textsize: 100,
+      bar_stroke: 0.35,
+      bar_alpha: 100,
+      bar_fps: 30,
+      keepCA: false,
+      mode: "html5",
+      pip: false,
+      auto: false,
+      auto_num: 2,
+      xml: false,
+      ngscore: "-Infinity",
+      nicoru_limit: 0,
+      premium_filter: false,
+      version: "7.5",
+    };
+    let storedConfig = {};
+    try {
+      storedConfig =
+        get_zouryou_config && get_zouryou_config !== "[null]"
+          ? JSON.parse(get_zouryou_config)
+          : {};
+    } catch (error) {
+      console.warn("[コメント増量] 設定を初期化します", error);
     }
+
+    zouryou_config = { ...defaults, ...storedConfig };
+    localStorage.setItem("zouryou_config", JSON.stringify(zouryou_config));
+
+    comment_num = document.getElementById("load_num");
+    comment_size = document.getElementById("bar_textsize");
+    stroke_opacity = document.getElementById("bar_stroke");
+    comment_opacity = document.getElementById("bar_alpha");
+    fps = document.getElementById("bar_fps");
+    pip = document.getElementById("iscanvas");
+    keepCA = document.getElementById("checkbox4");
+    auto = document.getElementById("isauto");
+    auto_num = document.getElementById("auto_num");
+    xml = document.getElementById("isxml");
+    ngscore = document.getElementById("ng_score");
+    nicoru_limit = document.getElementById("nicoru_num");
+    premium_filter = document.getElementById("premium_filter");
+    comment_num.value = zouryou_config.num;
+    comment_size.value = zouryou_config.bar_textsize;
+    stroke_opacity.value = zouryou_config.bar_stroke;
+    comment_opacity.value = zouryou_config.bar_alpha;
+    pip.checked = zouryou_config.pip;
+    keepCA.checked = zouryou_config.keepCA;
+    auto.checked = zouryou_config.auto;
+    fps.value = zouryou_config.bar_fps;
+    auto_num.value = zouryou_config.auto_num;
+    xml.checked = zouryou_config.xml;
+    nicoru_limit.value = zouryou_config.nicoru_limit || 0;
+    premium_filter.checked = zouryou_config.premium_filter || false;
+    ngscore.value = zouryou_config.ngscore || "-Infinity";
+    for (let i = 0; i < Math.min(val_stroke.length, bar_stroke.length); i++) {
+      val_stroke[i].innerText = bar_stroke[i].value;
+    }
+
     let l = document.getElementById("load_num");
     if (l.value.length >= 4) {
       l.style.width = "60%";
@@ -1148,14 +1450,17 @@ function PREPARE(observe) {
       "[aria-label='全画面表示を終了']"
     );
   }
-  let fullScreen = new MutationObserver(function () {
-    console.log(fullScreenButton.getAttribute("data-state"));
-    document.getElementById("allcommentsetting").style.visibility =
-      fullScreenButton.getAttribute("aria-label") == "全画面表示する"
-        ? "visible"
-        : "hidden";
-  });
-  fullScreen.observe(fullScreenButton, { childList: true, subtree: true });
+  if (fullScreenButton) {
+    let fullScreen = new MutationObserver(function () {
+      const allCommentSetting = document.getElementById("allcommentsetting");
+      if (!allCommentSetting) return;
+      allCommentSetting.style.visibility =
+        fullScreenButton.getAttribute("aria-label") == "全画面表示する"
+          ? "visible"
+          : "hidden";
+    });
+    fullScreen.observe(fullScreenButton, { childList: true, subtree: true });
+  }
 
   setTimeout(function () {
     function ShowButton() {
@@ -1183,6 +1488,7 @@ function PREPARE(observe) {
 
     ShowButton();
   }, 1000);
+  return true;
 }
 
 let index_html = chrome.runtime.getURL("files/setting.html");
@@ -1194,11 +1500,24 @@ fetch(index_html)
   .then((r) => r.text())
   .then((html) => {
     setting_html = html;
+  })
+  .catch((error) => {
+    console.error("[コメント増量] 設定画面の取得に失敗しました", error);
   });
-const start = setInterval(() => {
-  if (document.getElementsByClassName("d_flex gap_base")[5] != undefined) {
-    PREPARE();
-    clearInterval(start);
-  }
-}, 50);
-console.log("✨コメント増量 v7.4\nCopyright (c) 2022 tanbatu.");
+
+function startPreparePolling() {
+  const prepareTimer = setInterval(() => {
+    if (
+      NicoCommentApi.findPlayerElements(document) &&
+      NicoCommentApi.findSettingsMount(document) &&
+      typeof setting_html === "string" &&
+      PREPARE()
+    ) {
+      clearInterval(prepareTimer);
+    }
+  }, 50);
+  return prepareTimer;
+}
+
+startPreparePolling();
+  console.log("✨コメント増量 v7.5\nCopyright (c) 2022 tanbatu.");

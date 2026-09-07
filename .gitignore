@@ -26,3 +26,5 @@ dist-ssr
 build
 comment-zouryou.code-workspace
 test/*
+!test/nico-comment-api.test.js
+.playwright-cli/
