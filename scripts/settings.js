@@ -62,6 +62,25 @@ function PREPARE(observe) {
     "SuperDanmakuCanvasElement",
   );
   videoElement = player.video;
+  let estimateVideo;
+  function updateEstimatedCommentCount() {
+    const currentVideo = getPlayerElements().video;
+    if (estimateVideo !== currentVideo) {
+      estimateVideo?.removeEventListener("durationchange", updateEstimatedCommentCount);
+      estimateVideo = currentVideo;
+      estimateVideo?.addEventListener("durationchange", updateEstimatedCommentCount);
+    }
+    const duration = estimateVideo?.duration;
+    const multiplierInput = document.getElementById("load_num");
+    const multiplier = Number(multiplierInput.value || multiplierInput.placeholder);
+    const limit = duration < 60 ? 100 : duration < 300 ? 250 : duration < 600 ? 500 : 1000;
+    const count = Number.isFinite(duration) && duration > 0 && Number.isFinite(multiplier)
+      ? limit * multiplier
+      : "—";
+    const label = document.getElementById("estimated_comment_count");
+    const text = `最大読み込みコメント数:${count}件`;
+    if (label.textContent !== text) label.textContent = text;
+  }
   //let seekBar = document.getElementsByClassName("SeekBar")[0];
   //if (seekBar.classList.contains("is-disabled")) {
   //  seekBar.classList.remove("is-disabled");
@@ -181,6 +200,7 @@ function PREPARE(observe) {
       }
     }
     let l = document.getElementById("load_num");
+    updateEstimatedCommentCount();
     if (l.value.length >= 4) {
       l.style.width = "60%";
     } else {
@@ -307,6 +327,7 @@ function PREPARE(observe) {
     }, 100);
   };
   document.getElementById("load_num").oninput = () => {
+    updateEstimatedCommentCount();
     let l = document.getElementById("load_num");
     if (l.value.length >= 4) {
       l.style.width = "60%";
@@ -554,6 +575,7 @@ function PREPARE(observe) {
     }
     ShowButton();
     attachCommentOverlay();
+    updateEstimatedCommentCount();
     syncCommentVisibility();
   };
   const playerObserver = new MutationObserver(syncZouryouPlayer);
