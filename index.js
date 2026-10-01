@@ -1,7 +1,7 @@
 // サイト内遷移でも視聴ページのDOMが揃ってから一度だけ初期化する。
 const index_html = chrome.runtime.getURL("files/setting.html");
 const wave_image = chrome.runtime.getURL("lib/wave.png");
-const logo_image = chrome.runtime.getURL("lib/logo4.png");
+const logo_image = chrome.runtime.getURL("lib/logo2.png");
 const load_image = chrome.runtime.getURL("lib/load.svg");
 let setting_html;
 let prepared = false;
@@ -56,12 +56,24 @@ function reconcileWatchPage() {
   if (prepared) {
     syncZouryouPlayer();
     const player = getPlayerElements();
-    if (pendingAutoLoad && isWatchPage() && player.video && player.container &&
-        player.settings && player.buttonHost && zouryouSetting.isConnected) {
+    if (
+      pendingAutoLoad &&
+      isWatchPage() &&
+      player.video &&
+      player.container &&
+      player.settings &&
+      player.buttonHost &&
+      zouryouSetting.isConnected
+    ) {
       pendingAutoLoad = false;
       const targetPath = pagePath;
       autoLoadTimer = setTimeout(() => {
-        if (location.pathname !== targetPath || !isWatchPage() || !zouryouSetting.isConnected) return;
+        if (
+          location.pathname !== targetPath ||
+          !isWatchPage() ||
+          !zouryouSetting.isConnected
+        )
+          return;
         if (zouryouSetting.querySelector("#isauto").checked) {
           zouryouSetting.style.display = "block";
           CommentLimit = zouryouSetting.querySelector("#auto_num").value;
@@ -74,7 +86,12 @@ function reconcileWatchPage() {
   }
   if (!isWatchPage() || !setting_html) return;
   const player = getPlayerElements();
-  if (player.video && player.container && player.settings && player.buttonHost) {
+  if (
+    player.video &&
+    player.container &&
+    player.settings &&
+    player.buttonHost
+  ) {
     prepared = true;
     PREPARE();
   }
