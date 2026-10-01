@@ -193,6 +193,13 @@ function PREPARE(observe) {
       );
     } else {
       ngarray = JSON.parse(ng_storage);
+      // 保存済みのnullや空の項目を除去し、削除ボタンの位置も合わせる。
+      for (const type of ["command", "comment"]) {
+        ngarray[type] = (Array.isArray(ngarray[type]) ? ngarray[type] : []).filter(
+          (value) => typeof value === "string" && value.trim() !== ""
+        );
+      }
+      localStorage.setItem("ng_storage", JSON.stringify(ngarray));
       ngarray.command.forEach((command) => NG_LIST_COMMAND.push(command));
       ngarray.comment.forEach((comment) => NG_LIST_COMMENT.push(comment));
 
@@ -224,10 +231,19 @@ function PREPARE(observe) {
     ng_element();
     CONFIG();
   }
+  document.getElementById("reset_local_storage").onclick = () => {
+    if (!window.confirm("コメント増量の設定とNGリストを初期化し、ページを再読み込みします。よろしいですか？")) return;
+    // この拡張機能が使うキーだけを削除し、初期設定で読み込み直す。
+    localStorage.removeItem("zouryou_config");
+    localStorage.removeItem("ng_storage");
+    window.location.reload();
+  };
   document.getElementById("form_command").onclick = () => {
     ng_storage = localStorage.getItem("ng_storage");
     ngarray = JSON.parse(ng_storage);
     let ng_add = window.prompt("新たに追加するNGコマンドを入力してください。");
+    // Escやキャンセル、空欄の場合はNGリストに追加しない。
+    if (ng_add === null || ng_add.trim() === "") return;
     ngarray.command.push(ng_add);
     localStorage.setItem("ng_storage", JSON.stringify(ngarray));
 
@@ -239,6 +255,8 @@ function PREPARE(observe) {
     ng_storage = localStorage.getItem("ng_storage");
     ngarray = JSON.parse(ng_storage);
     let ng_add = window.prompt("新たに追加するNGコメントを入力してください。");
+    // Escやキャンセル、空欄の場合はNGリストに追加しない。
+    if (ng_add === null || ng_add.trim() === "") return;
     ngarray.comment.push(ng_add);
     localStorage.setItem("ng_storage", JSON.stringify(ngarray));
 

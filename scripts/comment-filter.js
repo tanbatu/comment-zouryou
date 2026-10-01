@@ -37,6 +37,8 @@ const COMMENT_CONTROL = (comments) => {
       }
     }
     NG_LIST_COMMAND.forEach((NG) => {
+      // 不正なNG項目が残っていてもコメントの読み込みを続ける。
+      if (typeof NG !== "string" || NG.trim() === "") return;
       let commands = NG.toLowerCase().split(" ");
       comments = comments.filter((comment) => {
         let ng_point = commands.length;
@@ -48,7 +50,9 @@ const COMMENT_CONTROL = (comments) => {
         return ng_point > 0;
       });
     });
-    NG_LIST_COMMENT.forEach(
+    NG_LIST_COMMENT.filter(
+      (NG) => typeof NG === "string" && NG.trim() !== ""
+    ).forEach(
       (NG) =>
         (comments = comments.filter(
           (comment) => comment.body.includes(NG) === false
