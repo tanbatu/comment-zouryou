@@ -479,8 +479,26 @@ function PREPARE(observe) {
     button.addEventListener("click", () => {
       setting.style.display = "block";
     });
-    if (currentPlayer.isMint) currentPlayer.buttonHost.appendChild(button);
-    else currentPlayer.buttonHost.before(button);
+    if (currentPlayer.isMint) {
+      const wrapper = document.createElement("div");
+      wrapper.className = "tooltip-wrapper";
+      wrapper.appendChild(button);
+      currentPlayer.buttonHost.insertAdjacentElement("beforebegin", wrapper);
+    } else {
+      button.style.color = "white";
+      currentPlayer.buttonHost.before(button);
+      return;
+    }
+    // 透明な背景は親要素までたどり、白背景では黒文字にする。
+    for (let element = button; element; element = element.parentElement) {
+      const background = getComputedStyle(element).backgroundColor;
+      const channels = background.match(/[\d.]+/g)?.map(Number);
+      if (!channels || (channels.length === 4 && channels[3] === 0)) continue;
+      if (channels.slice(0, 3).every((channel) => channel === 255)) {
+        button.style.color = "black";
+      }
+      break;
+    }
   }
   ShowButton();
   const playerObserver = new MutationObserver(() => {

@@ -9,7 +9,7 @@ function getPlayerElements() {
     container: isMint ? video.parentElement : document.querySelector('[data-name="content"]'),
     settings: document.querySelector(isMint ? ".stacker-content" : ".grid-area_\\[sidebar\\]"),
     buttonHost: document.querySelector(isMint
-      ? ".commentlist-title-container.global-flex.stacker-title"
+      ? ".commentlist-selector"
       : "[aria-label='設定']"),
     comments: document.querySelector(isMint ? "#pmw-element-commentcanvas" : '[data-name="comment"]'),
     commentToggle: document.querySelector(isMint
