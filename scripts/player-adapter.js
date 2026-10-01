@@ -1,4 +1,8 @@
 // プレイヤーごとの要素を取得し、既存プレイヤーとmintの違いを吸収する。
+function isWatchPage() {
+  return /^\/watch\/[^/]+\/?$/.test(location.pathname);
+}
+
 function getPlayerElements() {
   const mintVideo = document.getElementById("pmw-element-video");
   const isMint = !!mintVideo;
@@ -22,7 +26,12 @@ function getPlayerElements() {
 function attachCommentOverlay() {
   const player = getPlayerElements();
   if (!player.video || !CustomVideoContainer) return;
+  const previousVideo = videoElement;
   videoElement = player.video;
+  // 動画要素の交換時は、映像合成の参照先も更新する。
+  if (niconiComments && previousVideo !== videoElement) {
+    niconiComments.video = zouryouSetting.querySelector("#iscanvas").checked ? videoElement : undefined;
+  }
   PlayerContainer = player.container;
   if (player.isMint) {
     if (getComputedStyle(PlayerContainer).position === "static") {
@@ -38,10 +47,30 @@ function attachCommentOverlay() {
 }
 
 // mintでは標準コメントcanvasの上に増量コメントを描画する。
+function hasRetainedMintPlayer() {
+  const player = getPlayerElements();
+  return player.isMint && player.video === videoElement && player.video.isConnected;
+}
+
+let hiddenCommentElement;
+let originalCommentDisplay;
+function restoreCommentVisibility() {
+  if (hiddenCommentElement) hiddenCommentElement.style.display = originalCommentDisplay;
+  hiddenCommentElement = undefined;
+}
+
 function syncCommentVisibility() {
   const player = getPlayerElements();
   if (!CustomVideoContainer) return;
   const hidden = /^コメントを表示/.test(player.commentToggle?.getAttribute("aria-label") || "");
   CustomVideoContainer.style.visibility = hidden ? "hidden" : "visible";
-  if (DRAW_ && player.comments) player.comments.style.display = "none";
+  // 標準コメントは元の表示状態を保存し、終了や要素交換で復元する。
+  if (hiddenCommentElement && (!DRAW_ || hiddenCommentElement !== player.comments)) restoreCommentVisibility();
+  if (DRAW_ && player.comments) {
+    if (!hiddenCommentElement) {
+      hiddenCommentElement = player.comments;
+      originalCommentDisplay = player.comments.style.display;
+    }
+    if (player.comments.style.display !== "none") player.comments.style.display = "none";
+  }
 }

@@ -1,5 +1,35 @@
-// watchV4 ???????????????????
+// 視聴情報とコメントを取得し、終了した取得処理の結果は破棄する。
+let commentLoadController;
+function cancelCommentLoad() {
+  commentLoadController?.abort();
+  commentLoadController = undefined;
+}
+
 async function LOADCOMMENT(mode) {
+  cancelCommentLoad();
+  const controller = new AbortController();
+  commentLoadController = controller;
+  const checkLoad = () => {
+    if (controller.signal.aborted) throw new DOMException("コメント取得を中止しました", "AbortError");
+  };
+  // 通信と本文の読み込み後に中止を確認し、古い結果を反映させない。
+  const fetch = async (...args) => {
+    checkLoad();
+    const response = await globalThis.fetch(args[0], { ...args[1], signal: controller.signal });
+    checkLoad();
+    return {
+      json: async () => { const data = await response.json(); checkLoad(); return data; },
+      text: async () => { const data = await response.text(); checkLoad(); return data; },
+    };
+  };
+  // APIの待機も終了時に即座に解除する。
+  const sleep = (ms) => new Promise((resolve, reject) => {
+    checkLoad();
+    const abort = () => { clearTimeout(timer); reject(new DOMException("コメント取得を中止しました", "AbortError")); };
+    const timer = setTimeout(() => { controller.signal.removeEventListener("abort", abort); resolve(); }, ms);
+    controller.signal.addEventListener("abort", abort, { once: true });
+  });
+  try {
   attachCommentOverlay();
 
   logger("お待ち下さい");
@@ -273,10 +303,12 @@ async function LOADCOMMENT(mode) {
   logger(comments.length + "件のコメントを読み込みました");
   logger(`NG設定を適用しています`);
 
+  const filteredComments = await COMMENT_CONTROL(comments);
+  checkLoad();
   COMMENT = [
     {
       commentCount: comments.length,
-      comments: await COMMENT_CONTROL(comments),
+      comments: filteredComments,
       fork: "comment-zouryou",
       id: 0,
     },
@@ -288,10 +320,12 @@ async function LOADCOMMENT(mode) {
     },
   ];
   document.getElementById("reload_niconicomments").onclick = async () => {
+    const filteredComments = await COMMENT_CONTROL(comments);
+    if (controller.signal.aborted || !DRAW_) return;
     COMMENT = [
       {
         commentCount: comments.length,
-        comments: await COMMENT_CONTROL(comments),
+        comments: filteredComments,
         fork: "comment-zouryou",
         id: 0,
       },
@@ -310,4 +344,11 @@ async function LOADCOMMENT(mode) {
   logger(`描画準備中`);
   document.getElementById("progress_left").style.width = "0%";
   PLAYCOMMENT();
+  } catch (error) {
+    if (controller.signal.aborted) return;
+    console.error("コメント取得に失敗しました", error);
+    logger("コメント取得に失敗しました。再度お試しください。");
+    loading.style.display = "none";
+    document.getElementById("zenkomebutton").disabled = false;
+  }
 }

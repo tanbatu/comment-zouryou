@@ -1,4 +1,7 @@
-// ??????????????????
+// 設定画面とプレイヤーの接続を管理する。
+let zouryouSetting;
+let syncZouryouPlayer;
+
 function PREPARE(observe) {
   const player = getPlayerElements();
   // ページ側のp要素の文字サイズと色を、設定画面の挿入前に取得する。
@@ -88,12 +91,13 @@ function PREPARE(observe) {
   pipVideoElement.style =
     "position:absolute;top:0;left:0;width:100%;height:100%;z-index:1;pointer-events:all;display:none";
   pipVideoElement.onpause = () => {
-    pipVideoElement.play();
+    if (DRAW_ && pipVideoElement.srcObject) pipVideoElement.play().catch(console.error);
   };
 
   OLD_DATE = document.getElementById("zenkome-date");
   OLD_TIME = document.getElementById("zenkome-time");
   const setting = document.getElementById("allcommentsetting");
+  zouryouSetting = setting;
 
   document.getElementsByClassName("ZenkomeCloseButton")[0].addEventListener(
     "click",
@@ -385,6 +389,7 @@ function PREPARE(observe) {
     CommentLoadingScreenWrapper.style.display = this.checked ? "block" : "none";
   });
   document.getElementById("isxml").addEventListener("change", function () {
+    if (!apiData || !COMMENT.length) return;
     if (document.getElementById("isxml").checked) {
       download_comment = getXMLString(COMMENT);
       link.download = apiData.video.id + ".xml";
@@ -397,6 +402,7 @@ function PREPARE(observe) {
         "JSONをダウンロード";
     }
 
+    if (link.href.startsWith("blob:")) URL.revokeObjectURL(link.href);
     blob = new Blob([download_comment], { type: "text/plain" });
     link.style.visibility = "visible";
     link.href = URL.createObjectURL(blob);
@@ -410,12 +416,11 @@ function PREPARE(observe) {
   });
 
   document.getElementById("iscanvas").addEventListener("change", function () {
-    niconiComments.video = this.checked ? videoElement : null;
-    pipVideoElement.style.display = this.checked ? "block" : "none";
-    zouryouCanvasElement.style.display = this.checked ? "none" : "block";
+    syncCanvasVideo();
   });
 
   document.getElementById("isdebug").addEventListener("change", function () {
+    if (!niconiComments) return;
     niconiComments.showCommentCount =
       document.getElementById("isdebug").checked;
   });
@@ -464,10 +469,19 @@ function PREPARE(observe) {
   });
 
   // タブ切り替えでタイトルが作り直された場合もボタンを設置する。
+  let allButton;
+  let buttonWrapper;
   function ShowButton() {
-    if (document.getElementById("AllCommentViewButton")) return;
     const currentPlayer = getPlayerElements();
-    if (!currentPlayer.buttonHost) return;
+    if (!currentPlayer.buttonHost) {
+      (buttonWrapper || allButton)?.remove();
+      return;
+    }
+    if (allButton) {
+      const anchor = buttonWrapper || allButton;
+      if (anchor.nextElementSibling === currentPlayer.buttonHost) return;
+      anchor.remove();
+    }
     const button = document.createElement("button");
     button.id = "AllCommentViewButton";
     button.type = "button";
@@ -477,11 +491,16 @@ function PREPARE(observe) {
     button.style.cssText =
       "width:32px;color:inherit;cursor:pointer;flex-shrink:0;";
     button.addEventListener("click", () => {
+      if (!isWatchPage()) return;
+      setting.style.visibility = document.fullscreenElement ? "hidden" : "visible";
       setting.style.display = "block";
     });
+    allButton = button;
+    buttonWrapper = null;
     if (currentPlayer.isMint) {
       const wrapper = document.createElement("div");
       wrapper.className = "tooltip-wrapper";
+      buttonWrapper = wrapper;
       wrapper.appendChild(button);
       currentPlayer.buttonHost.insertAdjacentElement("beforebegin", wrapper);
     } else {
@@ -501,8 +520,24 @@ function PREPARE(observe) {
     }
   }
   ShowButton();
-  const playerObserver = new MutationObserver(() => {
+  syncZouryouPlayer = () => {
+    if (!isWatchPage() && !hasRetainedMintPlayer()) {
+      (buttonWrapper || allButton)?.remove();
+      setting.remove();
+      CustomVideoContainer.remove();
+      return;
+    }
+    if (!isWatchPage()) {
+      (buttonWrapper || allButton)?.remove();
+      // 取得中の設定参照を維持し、サイドバーが消えても処理を継続する。
+      setting.style.display = "none";
+      if (!setting.isConnected) document.body.appendChild(setting);
+      attachCommentOverlay();
+      syncCommentVisibility();
+      return;
+    }
     const currentPlayer = getPlayerElements();
+    if (!currentPlayer.video || !currentPlayer.container) return;
     setting.classList.toggle("zouryou-mint-settings", currentPlayer.isMint);
     // サイドバーが差し替えられても、設定と入力値を保持する。
     if (
@@ -520,7 +555,8 @@ function PREPARE(observe) {
     ShowButton();
     attachCommentOverlay();
     syncCommentVisibility();
-  });
+  };
+  const playerObserver = new MutationObserver(syncZouryouPlayer);
   playerObserver.observe(document.body, {
     childList: true,
     subtree: true,

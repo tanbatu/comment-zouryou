@@ -1,6 +1,8 @@
-// ?????????????????
+// コメント描画と映像合成の開始・終了を管理する。
 function load_NiconiComments() {
   console.log(COMMENT);
+  niconiComments?.destroy();
+  niconiComments = undefined;
   niconiComments = new NiconiComments(zouryouCanvasElement, COMMENT, {
     video: document.getElementById("iscanvas").checked
       ? videoElement
@@ -10,14 +12,15 @@ function load_NiconiComments() {
     keepCA: document.getElementById("checkbox4").checked,
     showCommentCount: document.getElementById("isdebug").checked,
     showFPS: document.getElementById("isdebug").checked,
-    config: (Config = {
+    config: {
       contextStrokeOpacity: Number(document.getElementById("bar_stroke").value),
       contextLineWidth: 3.5,
-    }),
+    },
     format: "v1",
   });
 }
 function ADDCOMMENT(val, pos, mail) {
+  if (!niconiComments) return;
   niconiComments.addComments({
     vpos: pos,
     content: val,
@@ -28,15 +31,63 @@ function ADDCOMMENT(val, pos, mail) {
   });
 }
 let commentDrawTimer;
-function PLAYCOMMENT() {
+let commentUiTimer;
+let playbackGeneration = 0;
+
+// 終了時は描画、一覧更新、映像ストリーム、画像キャッシュをまとめて解放する。
+function stopCommentPlayback() {
+  playbackGeneration++;
+  DRAW_ = false;
   clearTimeout(commentDrawTimer);
+  clearTimeout(commentUiTimer);
+  clearInterval(list_interval);
+  comment_list_active = false;
+  if (pipVideoElement) {
+    const stream = pipVideoElement.srcObject;
+    pipVideoElement.srcObject = null;
+    pipVideoElement.pause();
+    stream?.getTracks().forEach((track) => track.stop());
+  }
+  niconiComments?.destroy();
+  niconiComments = undefined;
+  if (link?.href?.startsWith("blob:")) URL.revokeObjectURL(link.href);
+  if (zouryouCanvasElement) {
+    const context = zouryouCanvasElement.getContext("2d");
+    context?.clearRect(0, 0, zouryouCanvasElement.width, zouryouCanvasElement.height);
+  }
+  if (link) link.removeAttribute("href");
+  restoreCommentVisibility();
+}
+
+// 映像合成が必要な場合だけストリームを生成し、不要になったら停止する。
+function syncCanvasVideo() {
+  const enabled = zouryouSetting.querySelector("#iscanvas").checked;
+  if (niconiComments) niconiComments.video = enabled ? videoElement : undefined;
+  pipVideoElement.style.display = enabled ? "block" : "none";
+  zouryouCanvasElement.style.display = enabled ? "none" : "block";
+  if (DRAW_ && enabled) {
+    if (!pipVideoElement.srcObject) pipVideoElement.srcObject = zouryouCanvasElement.captureStream(60);
+    pipVideoElement.muted = true;
+    pipVideoElement.play().catch(console.error);
+  } else {
+    const stream = pipVideoElement.srcObject;
+    pipVideoElement.srcObject = null;
+    pipVideoElement.pause();
+    stream?.getTracks().forEach((track) => track.stop());
+  }
+}
+function PLAYCOMMENT() {
+  stopCommentPlayback();
+  const generation = playbackGeneration;
   attachCommentOverlay();
   CustomVideoContainer.style.display = "block";
 
   zouryouCanvasElement = document.getElementById("zouryou_comment");
 
   console.log(COMMENT);
-  async function setup() {
+  function setup() {
+    if (generation !== playbackGeneration) return;
+    try {
     //DefaultVideoContainer.style.display = "block";
 
     if (document.getElementById("isxml").checked) {
@@ -54,6 +105,7 @@ function PLAYCOMMENT() {
     blob = new Blob([download_comment], { type: "text/plain" });
 
     link.style.visibility = "visible";
+    if (link.href.startsWith("blob:")) URL.revokeObjectURL(link.href);
     link.href = URL.createObjectURL(blob);
 
     attachCommentOverlay();
@@ -73,11 +125,13 @@ function PLAYCOMMENT() {
     DRAW_ = true;
     const fpsInput = document.getElementById("bar_fps");
     function draw() {
-      if (!DRAW_) return;
+      if (!DRAW_ || generation !== playbackGeneration) return;
       const startedAt = performance.now();
-      niconiComments.drawCanvas(Math.floor(videoElement.currentTime * 100));
+      if (videoElement?.isConnected && niconiComments) {
+        niconiComments.drawCanvas(Math.floor(videoElement.currentTime * 100));
+      }
       const fps = Number(fpsInput.value);
-      const frameInterval = 1000 / (Number.isFinite(fps) && fps > 0 ? fps : 30);
+      const frameInterval = 1000 / (Number.isFinite(fps) && fps > 0 ? Math.min(fps, 120) : 30);
       // 背景やPiPでの再生中も描画を続け、描画時間を待機時間に含める。
       commentDrawTimer = setTimeout(
         draw,
@@ -91,32 +145,38 @@ function PLAYCOMMENT() {
     //document.getElementsByClassName("CommentRenderer")[0].style.display =
     //  "none";
     //
-    pipVideoElement.srcObject = zouryouCanvasElement.captureStream(60);
-    pipVideoElement.muted = true;
-    pipVideoElement.play();
+    syncCanvasVideo();
 
     //void DANMAKU_SUPER();
-    setTimeout(() => {
+    commentUiTimer = setTimeout(() => {
+      if (generation !== playbackGeneration) return;
       document.getElementById("wrapper_buttons").style.height = "30px";
       document.getElementById("wrapper_buttons").style.opacity = "1";
       document.getElementsByClassName("scroll")[0].style.height =
         "calc(100% - 221px)";
     }, 200);
+    } catch (error) {
+      stopCommentPlayback();
+      CustomVideoContainer.style.display = "none";
+      loading.style.display = "none";
+      document.getElementById("zenkomebutton").disabled = false;
+      console.error("コメント描画の初期化に失敗しました", error);
+    }
   }
   document.getElementById("loaded").style.zIndex = "2";
   const comment_list = document.getElementById("comment_list");
   document
     .getElementById("comment_list_open")
-    .addEventListener("click", function () {
+    .onclick = function () {
       comment_list.style.visibility = "visible";
       comment_list_active = true;
-    });
+    };
   document
     .getElementById("comment_list_exit")
-    .addEventListener("click", function () {
+    .onclick = function () {
       comment_list.style.visibility = "hidden";
       comment_list_active = false;
-    });
+    };
   LIST_COMMENT();
   syncCommentVisibility();
   pipVideoElement.style.display = document.getElementById("iscanvas").checked
@@ -220,7 +280,7 @@ async function DANMAKU_SUPER() {
 let list_interval;
 function LIST_COMMENT() {
   clearInterval(list_interval);
-  const comments = COMMENT[0].comments;
+  const comments = [...(COMMENT[0]?.comments || [])];
   comments.sort((a, b) => a.vposMs - b.vposMs);
 
   const nowCommentPos = document.getElementById("now_comment_pos");
@@ -230,7 +290,7 @@ function LIST_COMMENT() {
     if (!DRAW_ || !videoElement || !comment_list_active) return;
 
     const currentTimeMs = Math.floor(videoElement.currentTime * 1000);
-    // Upper bound handles seeks, equal timestamps, and the end of the list.
+    // 二分探索でシーク、同時刻のコメント、一覧の末尾を扱う。
     let low = 0;
     let high = comments.length;
     while (low < high) {
@@ -244,7 +304,7 @@ function LIST_COMMENT() {
 
     nowCommentPos.textContent = "現在のコメント位置" + passIndex + '/' + comments.length;
     const fragment = document.createDocumentFragment();
-    // Show the latest 30 comments that have appeared, oldest first.
+    // 表示済みの最新30件を古い順に並べる。
     for (let i = Math.max(0, passIndex - 30); i < passIndex; i++) {
       const { body, nicoruCount } = comments[i];
       if (!body) continue;

@@ -8,8 +8,8 @@
   "content_scripts": [
     {
       "matches": [
-        "https://www.nicovideo.jp/watch/*",
-        "https://nicovideo.jp/watch/*"
+        "https://www.nicovideo.jp/*",
+        "https://nicovideo.jp/*"
       ],
       "js": [
         "lib/tf.js",
