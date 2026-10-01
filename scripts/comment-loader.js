@@ -31,7 +31,15 @@ async function LOADCOMMENT(mode) {
   const req = await fetch(
     "https://www.nicovideo.jp/watch/" + match[1] + "?responseType=json",
   );
-  apiData = (await req.json()).data.response.$watchV4.data;
+  const data = await req.json();
+  const response = data?.data?.response;
+  const currentData = response?.$watchV4?.data;
+  apiData = {
+    ...response,
+    ...currentData,
+    comment: currentData?.comment ?? response?.comment,
+    video: currentData?.video ?? response?.video,
+  };
   console.log(apiData);
 
   const joinObj = function (obj, fDelimiter, sDelimiter) {
