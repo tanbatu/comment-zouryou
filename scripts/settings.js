@@ -1,0 +1,435 @@
+// ??????????????????
+function PREPARE(observe) {
+  document
+    .getElementsByClassName("grid-area_[sidebar]")[0]
+    .insertAdjacentHTML("afterbegin", setting_html);
+  let customStyle = document.createElement("style");
+  customStyle.innerHTML =
+    ".CustomVideoContainer{width: 100%;height:100%;position: absolute;top: 0;left: 0;}body.is-large:not(.is-fullscreen) .CustomVideoContainer {width: 854px;height: 480px;}body.is-fullscreen .CustomVideoContainer {width: 100vw !important;height: 100vh !important;}@media screen and (min-width: 1286px) and (min-height: 590px){body.is-autoResize:not(.is-fullscreen) .CustomVideoContainer {width: 854px;height: 480px;}@media screen and (min-width: 1392px) and (min-height: 650px){body.is-autoResize:not(.is-fullscreen) .CustomVideoContainer {width: 960px;height: 540px;}} @media screen and (min-width: 1736px) and (min-height: 850px) {body.is-autoResize:not(.is-fullscreen) .CustomVideoContainer {width: 1280px;height: 720px;}}}";
+  document.body.appendChild(customStyle);
+  CommentRenderer = document.getElementsByClassName("CommentRenderer")[0];
+  VideoSymbolContainer = document.getElementsByClassName(
+    "VideoSymbolContainer"
+  )[0];
+  PlayerContainer = document.querySelector('[data-name="content"]');
+  //DefaultVideoContainer = document.getElementsByClassName(
+  //  "InView VideoContainer"
+  //)[0];
+  CustomVideoContainer = document.createElement("div");
+  CustomVideoContainer.innerHTML = `<div class="CommentRenderer"><canvas id="zouryou_comment" width="1920" height="1080"></canvas><canvas id="SuperDanmakuCanvasElement" width="640" height="360"></canvas><video id="pipVideoElement"></video></div>`;
+  CustomVideoContainer.classList.add("CustomVideoContainer", "InView");
+  for (let i = 0; i < 2; i++) {
+    document.getElementsByClassName("wave")[
+      i
+    ].style = `background:url(${wave_image});
+      background-size: 1000px 50px;`;
+  }
+  document.getElementById("logo").src = logo_image;
+  document.getElementById("loading_image").src = load_image;
+
+  document
+    .querySelector('[data-name="video-content"]')
+    .after(CustomVideoContainer);
+  zouryouCanvasElement = document.getElementById("zouryou_comment");
+  SuperDanmakuCanvasElement = document.getElementById(
+    "SuperDanmakuCanvasElement"
+  );
+  videoElement = document.querySelector('[data-name="video-content"]');
+  //let seekBar = document.getElementsByClassName("SeekBar")[0];
+  //if (seekBar.classList.contains("is-disabled")) {
+  //  seekBar.classList.remove("is-disabled");
+  //}
+
+  SuperDanmakuCanvasElement.width = 640;
+  SuperDanmakuCanvasElement.height = 360;
+
+  console.log(videoElement);
+  pipVideoElement = document.getElementById("pipVideoElement");
+  CommentLoadingScreenWrapper = document.createElement("div");
+  CommentLoadingScreenWrapper.id = "CommentLoadingScreenWrapper";
+  CommentLoadingScreenWrapper.innerHTML =
+    '<div id="CommentLoadingScreen"></div>';
+  document
+    .getElementsByClassName("CustomVideoContainer InView")[0]
+    .appendChild(CommentLoadingScreenWrapper);
+
+  CommentLoadingScreen = document.getElementById("CommentLoadingScreen");
+  link = document.getElementById("loaded");
+  CustomVideoContainer.style.display = "none";
+  CustomVideoContainer.style.zIndex = "1";
+  CustomVideoContainer.style.pointerEvents = "none";
+  zouryouCanvasElement.style = `position:absolute;top:0;left:0;width:100%;height:100%;z-index:0;display:block;object-fit:contain;`;
+  SuperDanmakuCanvasElement.style =
+    "position:absolute;top:0;left:0;width:100%;height:100%;z-index:1;display:block;opacity:0;";
+  pipVideoElement.style =
+    "position:absolute;top:0;left:0;width:100%;height:100%;z-index:1;pointer-events:all;display:none";
+  pipVideoElement.onpause = () => {
+    pipVideoElement.play();
+  };
+
+  OLD_DATE = document.getElementById("zenkome-date");
+  OLD_TIME = document.getElementById("zenkome-time");
+  const setting = document.getElementById("allcommentsetting");
+
+  document.getElementsByClassName("ZenkomeCloseButton")[0].addEventListener(
+    "click",
+    () => {
+      setting.style.display = "none";
+    },
+    false
+  );
+  OLD_DATE.min = "2007-03-03";
+  OLD_DATE.max = new Date().getFullYear() + "-12-31";
+  const val_stroke = document.getElementsByClassName("range_val");
+  const bar_stroke = document.getElementsByClassName("range_bar");
+  let get_zouryou_config = localStorage.getItem("zouryou_config");
+  let zouryou_config;
+  let comment_num,
+    comment_size,
+    stroke_opacity,
+    comment_opacity,
+    fps,
+    pip,
+    keepCA,
+    auto,
+    xml,
+    ngscore,
+    nicoru_limit,
+    premium_filter,
+    version;
+  function CONFIG() {
+    get_zouryou_config = localStorage.getItem("zouryou_config");
+    if (get_zouryou_config == null || get_zouryou_config == "[null]") {
+      localStorage.setItem(
+        "zouryou_config",
+        JSON.stringify({
+          num: 5,
+          bar_textsize: 100,
+          bar_stroke: 0.35,
+          bar_alpha: 100,
+          bar_fps: 30,
+          keepCA: false,
+          mode: "html5",
+          pip: false,
+          auto: false,
+          auto_num: 2,
+          xml: false,
+          ngscore: "-Infinity",
+          nicoru_limit: 0,
+          premium_filter: false,
+          version: "7.3.3",
+        })
+      );
+    } else {
+      zouryou_config = JSON.parse(get_zouryou_config);
+      comment_num = document.getElementById("load_num");
+      comment_size = document.getElementById("bar_textsize");
+      stroke_opacity = document.getElementById("bar_stroke");
+      comment_opacity = document.getElementById("bar_alpha");
+      fps = document.getElementById("bar_fps");
+      pip = document.getElementById("iscanvas");
+      keepCA = document.getElementById("checkbox4");
+      auto = document.getElementById("isauto");
+      auto_num = document.getElementById("auto_num");
+      xml = document.getElementById("isxml");
+      ngscore = document.getElementById("ng_score");
+      nicoru_limit = document.getElementById("nicoru_num");
+      premium_filter = document.getElementById("premium_filter");
+      comment_num.value = zouryou_config.num;
+      comment_size.value = zouryou_config.bar_textsize;
+      stroke_opacity.value = zouryou_config.bar_stroke;
+      comment_opacity.value = zouryou_config.bar_alpha;
+      pip.checked = zouryou_config.pip;
+      keepCA.checked = zouryou_config.keepCA;
+      auto.checked = zouryou_config.auto;
+      fps.value = zouryou_config.bar_fps;
+      auto_num.value = zouryou_config.auto_num;
+      xml.checked = zouryou_config.xml;
+      nicoru_limit.value = zouryou_config.nicoru_limit || 0;
+      premium_filter.checked = zouryou_config.premium_filter || false;
+      ngscore.value = zouryou_config.ngscore || "-Infinity";
+      for (let i = 0; i < val_stroke.length; i++) {
+        val_stroke[i].innerText = bar_stroke[i].value;
+      }
+    }
+    let l = document.getElementById("load_num");
+    if (l.value.length >= 4) {
+      l.style.width = "60%";
+    } else {
+      l.style.width = "50%";
+    }
+  }
+
+  let ng_storage = localStorage.getItem("ng_storage");
+  let ngarray,
+    SETTING_NG_LIST_COMMENT,
+    SETTING_NG_LIST_COMMAND,
+    SETTING_NG_LIST_ISEASY;
+
+  function NG_DELETE(type, i) {
+    ngarray[type].splice(i, 1);
+    localStorage.setItem("ng_storage", JSON.stringify(ngarray));
+    setTimeout(() => {
+      ng_element();
+    }, 100);
+  }
+
+  function ng_element() {
+    ng_storage = localStorage.getItem("ng_storage");
+    NG_LIST_COMMAND = [];
+    NG_LIST_COMMENT = [];
+    SETTING_NG_LIST_ISEASY = document.getElementById("iseasy");
+    SETTING_NG_LIST_COMMENT = document.getElementById("ng_comment");
+    SETTING_NG_LIST_COMMAND = document.getElementById("ng_command");
+    loading_text = document.getElementById("loading_text");
+    loading = document.getElementById("loading");
+    SETTING_NG_LIST_COMMAND.innerHTML = "";
+    SETTING_NG_LIST_COMMENT.innerHTML = "";
+
+    if (ng_storage == null || ng_storage == "[null]") {
+      localStorage.setItem(
+        "ng_storage",
+        JSON.stringify({ command: [], comment: [], easy: false })
+      );
+    } else {
+      ngarray = JSON.parse(ng_storage);
+      ngarray.command.forEach((command) => NG_LIST_COMMAND.push(command));
+      ngarray.comment.forEach((comment) => NG_LIST_COMMENT.push(comment));
+
+      SETTING_NG_LIST_COMMENT.innerHTML = "";
+      SETTING_NG_LIST_COMMAND.innerHTML = "";
+      for (let i = 0; i < NG_LIST_COMMENT.length; i++) {
+        SETTING_NG_LIST_COMMENT.innerHTML += `<li>${NG_LIST_COMMENT[i]}
+          <button id="del_e${i}" class="deletebutton" ></button></li>`;
+      }
+      for (let i = 0; i < NG_LIST_COMMENT.length; i++) {
+        document.getElementById(`del_e${i}`).onclick = function (e) {
+          NG_DELETE("comment", i);
+        };
+      }
+      for (let i = 0; i < NG_LIST_COMMAND.length; i++) {
+        SETTING_NG_LIST_COMMAND.innerHTML += `<li>${NG_LIST_COMMAND[i]}
+          <button id="del_a${i}"  class="deletebutton" ></button></li>`;
+      }
+      for (let i = 0; i < NG_LIST_COMMAND.length; i++) {
+        document.getElementById(`del_a${i}`).onclick = function (e) {
+          NG_DELETE("command", i);
+        };
+      }
+      SETTING_NG_LIST_ISEASY.checked = ngarray.easy;
+    }
+  }
+
+  if (!observe) {
+    ng_element();
+    CONFIG();
+  }
+  document.getElementById("form_command").onclick = () => {
+    ng_storage = localStorage.getItem("ng_storage");
+    ngarray = JSON.parse(ng_storage);
+    let ng_add = window.prompt("新たに追加するNGコマンドを入力してください。");
+    ngarray.command.push(ng_add);
+    localStorage.setItem("ng_storage", JSON.stringify(ngarray));
+
+    setTimeout(() => {
+      ng_element();
+    }, 100);
+  };
+  document.getElementById("form_comment").onclick = () => {
+    ng_storage = localStorage.getItem("ng_storage");
+    ngarray = JSON.parse(ng_storage);
+    let ng_add = window.prompt("新たに追加するNGコメントを入力してください。");
+    ngarray.comment.push(ng_add);
+    localStorage.setItem("ng_storage", JSON.stringify(ngarray));
+
+    setTimeout(() => {
+      ng_element();
+    }, 100);
+  };
+  document.getElementById("iseasy").onclick = () => {
+    ng_storage = localStorage.getItem("ng_storage");
+    ngarray = JSON.parse(ng_storage);
+    ngarray.easy = !ngarray.easy;
+    localStorage.setItem("ng_storage", JSON.stringify(ngarray));
+    setTimeout(() => {
+      ng_element();
+    }, 100);
+  };
+  document.getElementById("load_num").oninput = () => {
+    let l = document.getElementById("load_num");
+    if (l.value.length >= 4) {
+      l.style.width = "60%";
+    } else {
+      l.style.width = "50%";
+    }
+
+    get_zouryou_config = localStorage.getItem("zouryou_config");
+    zouryou_config = JSON.parse(get_zouryou_config);
+    zouryou_config.num = document.getElementById("load_num").value;
+    localStorage.setItem("zouryou_config", JSON.stringify(zouryou_config));
+  };
+  document.getElementById("checkbox4").onclick = () => {
+    get_zouryou_config = localStorage.getItem("zouryou_config");
+    zouryou_config = JSON.parse(get_zouryou_config);
+    zouryou_config.keepCA = !zouryou_config.keepCA;
+    localStorage.setItem("zouryou_config", JSON.stringify(zouryou_config));
+  };
+  document.getElementById("iscanvas").onclick = () => {
+    get_zouryou_config = localStorage.getItem("zouryou_config");
+    zouryou_config = JSON.parse(get_zouryou_config);
+    zouryou_config.pip = !zouryou_config.pip;
+    localStorage.setItem("zouryou_config", JSON.stringify(zouryou_config));
+  };
+  document.getElementById("isauto").onclick = () => {
+    get_zouryou_config = localStorage.getItem("zouryou_config");
+    zouryou_config = JSON.parse(get_zouryou_config);
+    zouryou_config.auto = !zouryou_config.auto;
+    localStorage.setItem("zouryou_config", JSON.stringify(zouryou_config));
+  };
+  document.getElementById("isxml").onclick = () => {
+    get_zouryou_config = localStorage.getItem("zouryou_config");
+    zouryou_config = JSON.parse(get_zouryou_config);
+    zouryou_config.xml = !zouryou_config.xml;
+    localStorage.setItem("zouryou_config", JSON.stringify(zouryou_config));
+  };
+  document.getElementById("auto_num").oninput = () => {
+    get_zouryou_config = localStorage.getItem("zouryou_config");
+    zouryou_config = JSON.parse(get_zouryou_config);
+    zouryou_config.auto_num = document.getElementById("auto_num").value;
+    localStorage.setItem("zouryou_config", JSON.stringify(zouryou_config));
+  };
+  document.getElementById("nicoru_num").oninput = () => {
+    get_zouryou_config = localStorage.getItem("zouryou_config");
+    zouryou_config = JSON.parse(get_zouryou_config);
+    zouryou_config.nicoru_limit = document.getElementById("nicoru_num").value;
+    localStorage.setItem("zouryou_config", JSON.stringify(zouryou_config));
+  };
+  document.getElementById("ng_score").onchange = () => {
+    get_zouryou_config = localStorage.getItem("zouryou_config");
+    zouryou_config = JSON.parse(get_zouryou_config);
+    zouryou_config.ngscore = document.getElementById("ng_score").value;
+    localStorage.setItem("zouryou_config", JSON.stringify(zouryou_config));
+  };
+  document.getElementById("premium_filter").onclick = () => {
+    get_zouryou_config = localStorage.getItem("zouryou_config");
+    zouryou_config = JSON.parse(get_zouryou_config);
+    zouryou_config.premium_filter = !zouryou_config.premium_filter;
+    localStorage.setItem("zouryou_config", JSON.stringify(zouryou_config));
+  };
+
+  for (let i = 0; i < val_stroke.length; i++) {
+    bar_stroke[i].addEventListener(
+      "input",
+      function (e) {
+        val_stroke[i].innerText = e.target.value;
+        if (this.id == "bar_alpha") {
+          zouryouCanvasElement.style.opacity = e.target.value * 0.01;
+        }
+        get_zouryou_config = localStorage.getItem("zouryou_config");
+        zouryou_config = JSON.parse(get_zouryou_config);
+        zouryou_config[bar_stroke[i].id] = e.target.value;
+        localStorage.setItem("zouryou_config", JSON.stringify(zouryou_config));
+      },
+      false
+    );
+  }
+
+  document.getElementById("islogger").addEventListener("change", function () {
+    CommentLoadingScreenWrapper.style.display = this.checked ? "block" : "none";
+  });
+  document.getElementById("isxml").addEventListener("change", function () {
+    if (document.getElementById("isxml").checked) {
+      download_comment = getXMLString(COMMENT);
+      link.download = apiData.video.id + ".xml";
+      document.getElementsByClassName("loadbutton_text")[0].innerText =
+        "XMLをダウンロード";
+    } else {
+      download_comment = [JSON.stringify(COMMENT)];
+      link.download = apiData.video.id + ".json";
+      document.getElementsByClassName("loadbutton_text")[0].innerText =
+        "JSONをダウンロード";
+    }
+
+    blob = new Blob([download_comment], { type: "text/plain" });
+    link.style.visibility = "visible";
+    link.href = URL.createObjectURL(blob);
+  });
+  document.getElementById("ismask").addEventListener("change", function () {
+    if (!this.checked) {
+      setTimeout(() => {
+        zouryouCanvasElement.style.setProperty("-webkit-mask-image", ``);
+      }, 100);
+    }
+  });
+
+  document.getElementById("iscanvas").addEventListener("change", function () {
+    niconiComments.video = this.checked ? videoElement : null;
+    pipVideoElement.style.display = this.checked ? "block" : "none";
+    zouryouCanvasElement.style.display = this.checked ? "none" : "block";
+  });
+
+  document.getElementById("isdebug").addEventListener("change", function () {
+    niconiComments.showCommentCount =
+      document.getElementById("isdebug").checked;
+  });
+  if (document.getElementById("isauto").checked == true) {
+    setting.style.display = "block";
+    CommentLimit = document.getElementById("auto_num").value;
+    CommentLimit = CommentLimit > 5 ? 5 : CommentLimit;
+    LOADCOMMENT("auto");
+    document.getElementById("zenkomebutton").disabled = true;
+  }
+  document.getElementById("zenkomebutton").onclick = () => {
+    let num = document.getElementById("load_num").value;
+    CommentLimit = num !== "" ? Number(num) : 5;
+    document.getElementById("zenkomebutton").disabled = true;
+
+    LOADCOMMENT();
+  };
+
+  ////
+  let fullScreenButton = document.querySelector(
+    "[aria-label='全画面表示する']"
+  );
+  if (fullScreenButton == undefined) {
+    fullScreenButton = document.querySelector(
+      "[aria-label='全画面表示を終了']"
+    );
+  }
+  let fullScreen = new MutationObserver(function () {
+    console.log(fullScreenButton.getAttribute("data-state"));
+    document.getElementById("allcommentsetting").style.visibility =
+      fullScreenButton.getAttribute("aria-label") == "全画面表示する"
+        ? "visible"
+        : "hidden";
+  });
+  fullScreen.observe(fullScreenButton, { childList: true, subtree: true });
+
+  setTimeout(function () {
+    function ShowButton() {
+      console.log(1);
+      if (document.getElementById("AllCommentViewButton") != undefined) return;
+      let settingButton = document.querySelector("[aria-label='設定']");
+      if (settingButton != undefined) {
+        document.querySelector("[aria-label='設定']").insertAdjacentHTML(
+          "beforebegin",
+          `
+          <button aria-label="コメント増量" style="width:26px;color:white" data-scope="tooltip" data-part="trigger" id="AllCommentViewButton" dir="ltr" data-state="closed" class="cursor_pointer" type="button" tabindex="0" title="コメント増量">
+          ALL
+          </button> 
+        `
+        );
+        document.getElementById("AllCommentViewButton").addEventListener(
+          "click",
+          () => {
+            setting.style.display = "block";
+          },
+          false
+        );
+      }
+    }
+
+    ShowButton();
+  }, 1000);
+}
+
