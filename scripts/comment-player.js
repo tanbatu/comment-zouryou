@@ -27,7 +27,9 @@ function ADDCOMMENT(val, pos, mail) {
     layer: -1,
   });
 }
+let commentDrawTimer;
 function PLAYCOMMENT() {
+  clearTimeout(commentDrawTimer);
   document.getElementsByClassName("CustomVideoContainer")[0].style.display =
     "block";
   const commentRenderers = document.getElementsByClassName("CommentRenderer");
@@ -38,7 +40,6 @@ function PLAYCOMMENT() {
 
   zouryouCanvasElement = document.getElementById("zouryou_comment");
 
-  let draw;
   console.log(COMMENT);
   async function setup() {
     //DefaultVideoContainer.style.display = "block";
@@ -75,11 +76,18 @@ function PLAYCOMMENT() {
     console.log(niconiComments);
 
     DRAW_ = true;
+    const fpsInput = document.getElementById("bar_fps");
     function draw() {
+      if (!DRAW_) return;
+      const startedAt = performance.now();
       niconiComments.drawCanvas(Math.floor(videoElement.currentTime * 100));
-      if (DRAW_ == false) return;
-
-      setTimeout(draw, 1000 / document.getElementById("bar_fps").value);
+      const fps = Number(fpsInput.value);
+      const frameInterval = 1000 / (Number.isFinite(fps) && fps > 0 ? fps : 30);
+      // Timers also run during background/PiP playback; include drawing in the budget.
+      commentDrawTimer = setTimeout(
+        draw,
+        Math.max(0, frameInterval - (performance.now() - startedAt))
+      );
     }
     draw();
 
@@ -167,7 +175,7 @@ function PLAYCOMMENT() {
   //      );
   //    }
   //  });
-  setTimeout(setup, 1000);
+  commentDrawTimer = setTimeout(setup, 1000);
 }
 let lastCurrentTime = -1;
 /*
@@ -231,38 +239,51 @@ async function DANMAKU_SUPER() {
 }*/
 let list_interval;
 function LIST_COMMENT() {
-  COMMENT[0].comments.sort(function (a, b) {
-    if (a.vposMs < b.vposMs) return -1;
-    if (a.vposMs > b.vposMs) return 1;
-    return 0;
-  });
+  clearInterval(list_interval);
+  const comments = COMMENT[0].comments;
+  comments.sort((a, b) => a.vposMs - b.vposMs);
 
-  let now_comment_pos = document.getElementById("now_comment_pos");
+  const nowCommentPos = document.getElementById("now_comment_pos");
+  const commentList = document.getElementById("comment_list_comments");
+  let lastPassIndex = -1;
   list_interval = setInterval(() => {
-    if (videoElement.currentTime === lastCurrentTime) return;
-    lastCurrentTime = videoElement.currentTime;
-    if (!comment_list_active) return;
+    if (!DRAW_ || !videoElement || !comment_list_active) return;
 
-    let passIndex = COMMENT[0].comments.findIndex(function (element) {
-      return element.vposMs > Math.floor(videoElement.currentTime * 1000);
-    });
-    now_comment_pos.innerText = `現在のコメント位置${passIndex}/${COMMENT[0].comments.length}`;
-    document.getElementById("comment_list_comments").innerHTML = "";
-    for (let i = 0; i < 30; i++) {
-      let body = COMMENT[0].comments[passIndex - i]?.body;
-      let nicoru = COMMENT[0].comments[passIndex - i]?.nicoruCount || "";
-      if (body == undefined) body = "";
-      let commentElement = document.createElement("div");
-      commentElement.className = "list_comment";
-      if (body != "") {
-        commentElement.innerHTML = `<div style="padding:0px 2px;display:flex;background-color:rgba(243, 186, 0, ${
-          nicoru / 10
-        })"><p style="width:95%;">${body}</p><p style="padding-top:4px;width:5%;">${nicoru}</p></div>`;
-        document
-          .getElementById("comment_list_comments")
-          .prepend(commentElement);
-      }
+    const currentTimeMs = Math.floor(videoElement.currentTime * 1000);
+    // Upper bound handles seeks, equal timestamps, and the end of the list.
+    let low = 0;
+    let high = comments.length;
+    while (low < high) {
+      const middle = Math.floor((low + high) / 2);
+      if (comments[middle].vposMs <= currentTimeMs) low = middle + 1;
+      else high = middle;
     }
+    const passIndex = low;
+    if (passIndex === lastPassIndex) return;
+    lastPassIndex = passIndex;
+
+    nowCommentPos.textContent = "現在のコメント位置" + passIndex + '/' + comments.length;
+    const fragment = document.createDocumentFragment();
+    // Show the latest 30 comments that have appeared, oldest first.
+    for (let i = Math.max(0, passIndex - 30); i < passIndex; i++) {
+      const { body, nicoruCount } = comments[i];
+      if (!body) continue;
+      const nicoru = nicoruCount || "";
+      const commentElement = document.createElement("div");
+      commentElement.className = "list_comment";
+      const row = document.createElement("div");
+      row.style.cssText = "padding:0px 2px;display:flex";
+      row.style.backgroundColor = 'rgba(243, 186, 0, ' + Number(nicoru) / 10 + ')';
+      const bodyElement = document.createElement("p");
+      bodyElement.style.width = "95%";
+      bodyElement.textContent = body;
+      const nicoruElement = document.createElement("p");
+      nicoruElement.style.cssText = "padding-top:4px;width:5%";
+      nicoruElement.textContent = nicoru;
+      row.append(bodyElement, nicoruElement);
+      commentElement.append(row);
+      fragment.append(commentElement);
+    }
+    commentList.replaceChildren(fragment);
   }, 50);
 }
-
