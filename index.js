@@ -1,5 +1,9 @@
 // ????????????????????????? manifest.json ????????
 let observer = new MutationObserver(function () {
+  if (!document.getElementById("allcommentsetting")) {
+    href = location.href;
+    return;
+  }
   if (href.split("?")[0] !== location.href.split("?")[0]) {
     document.getElementById("loaded").style.zIndex = "0";
     document.getElementById("wrapper_buttons").style.height = "0px";
@@ -49,9 +53,11 @@ fetch(index_html)
     setting_html = html;
   });
 const start = setInterval(() => {
-  if (document.getElementsByClassName("d_flex gap_base")[5] != undefined) {
-    PREPARE();
+  const player = getPlayerElements();
+  if (setting_html && player.video && player.container && player.settings && player.buttonHost) {
+    // 初期化中にエラーが起きても、設定画面を繰り返し挿入しない。
     clearInterval(start);
+    PREPARE();
   }
 }, 50);
 console.log("✨コメント増量 v7.4\nCopyright (c) 2022 tanbatu.");

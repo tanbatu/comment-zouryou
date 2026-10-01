@@ -1,19 +1,6 @@
 // watchV4 ???????????????????
 async function LOADCOMMENT(mode) {
-  const commentRenderers = document.getElementsByClassName("CommentRenderer");
-  if (commentRenderers.length === 0) {
-    PlayerContainer = document.querySelector('[data-name="content"]');
-    const CustomVideoContainer = document.createElement("div");
-    CustomVideoContainer.classList.add("CustomVideoContainer", "InView");
-    CustomVideoContainer.style.cssText =
-      "display: none; z-index: 1; pointer-events: none;";
-    CustomVideoContainer.innerHTML = `<div class="CommentRenderer">
-      <canvas id="zouryou_comment" width="1920" height="1080" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; z-index: 0; display: block; object-fit: contain;"></canvas>
-      <canvas id="SuperDanmakuCanvasElement" width="640" height="360"></canvas>
-      <video id="pipVideoElement"></video>
-    </div>`;
-    PlayerContainer.children[0].after(CustomVideoContainer);
-  }
+  attachCommentOverlay();
 
   logger("お待ち下さい");
   loading.style.display = "block";

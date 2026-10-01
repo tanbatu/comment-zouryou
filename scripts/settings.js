@@ -1,17 +1,44 @@
 // ??????????????????
 function PREPARE(observe) {
+  const player = getPlayerElements();
+  // ページ側のp要素の文字サイズと色を、設定画面の挿入前に取得する。
+  const fontSample = document.createElement("p");
+  fontSample.style.cssText =
+    "position:absolute;visibility:hidden;pointer-events:none;";
+  player.settings.appendChild(fontSample);
+  const sampleStyle = getComputedStyle(fontSample);
+  const baseFontSize = "14px";
+  const baseTextColor = sampleStyle.color;
+  fontSample.remove();
+  player.settings.insertAdjacentHTML("afterbegin", setting_html);
   document
-    .getElementsByClassName("grid-area_[sidebar]")[0]
-    .insertAdjacentHTML("afterbegin", setting_html);
+    .getElementById("allcommentsetting")
+    .style.setProperty("--zouryou-base-font-size", baseFontSize);
+  document
+    .getElementById("allcommentsetting")
+    .style.setProperty("--zouryou-base-text-color", baseTextColor);
+  document
+    .getElementById("allcommentsetting")
+    .classList.toggle("zouryou-mint-settings", player.isMint);
+  if (
+    player.isMint &&
+    getComputedStyle(player.settings).position === "static"
+  ) {
+    player.settings.style.position = "relative";
+  }
   let customStyle = document.createElement("style");
   customStyle.innerHTML =
     ".CustomVideoContainer{width: 100%;height:100%;position: absolute;top: 0;left: 0;}body.is-large:not(.is-fullscreen) .CustomVideoContainer {width: 854px;height: 480px;}body.is-fullscreen .CustomVideoContainer {width: 100vw !important;height: 100vh !important;}@media screen and (min-width: 1286px) and (min-height: 590px){body.is-autoResize:not(.is-fullscreen) .CustomVideoContainer {width: 854px;height: 480px;}@media screen and (min-width: 1392px) and (min-height: 650px){body.is-autoResize:not(.is-fullscreen) .CustomVideoContainer {width: 960px;height: 540px;}} @media screen and (min-width: 1736px) and (min-height: 850px) {body.is-autoResize:not(.is-fullscreen) .CustomVideoContainer {width: 1280px;height: 720px;}}}";
+  customStyle.textContent += `
+    .CustomVideoContainer.zouryou-mint-overlay {width:100% !important;height:100% !important;}
+    .stacker-content > #allcommentsetting {position:absolute !important;inset:0;width:100%;height:100% !important;margin:0;z-index:50;}
+  `;
   document.body.appendChild(customStyle);
   CommentRenderer = document.getElementsByClassName("CommentRenderer")[0];
   VideoSymbolContainer = document.getElementsByClassName(
-    "VideoSymbolContainer"
+    "VideoSymbolContainer",
   )[0];
-  PlayerContainer = document.querySelector('[data-name="content"]');
+  PlayerContainer = player.container;
   //DefaultVideoContainer = document.getElementsByClassName(
   //  "InView VideoContainer"
   //)[0];
@@ -19,22 +46,19 @@ function PREPARE(observe) {
   CustomVideoContainer.innerHTML = `<div class="CommentRenderer"><canvas id="zouryou_comment" width="1920" height="1080"></canvas><canvas id="SuperDanmakuCanvasElement" width="640" height="360"></canvas><video id="pipVideoElement"></video></div>`;
   CustomVideoContainer.classList.add("CustomVideoContainer", "InView");
   for (let i = 0; i < 2; i++) {
-    document.getElementsByClassName("wave")[
-      i
-    ].style = `background:url(${wave_image});
+    document.getElementsByClassName("wave")[i].style =
+      `background:url(${wave_image});
       background-size: 1000px 50px;`;
   }
   document.getElementById("logo").src = logo_image;
   document.getElementById("loading_image").src = load_image;
 
-  document
-    .querySelector('[data-name="video-content"]')
-    .after(CustomVideoContainer);
+  attachCommentOverlay();
   zouryouCanvasElement = document.getElementById("zouryou_comment");
   SuperDanmakuCanvasElement = document.getElementById(
-    "SuperDanmakuCanvasElement"
+    "SuperDanmakuCanvasElement",
   );
-  videoElement = document.querySelector('[data-name="video-content"]');
+  videoElement = player.video;
   //let seekBar = document.getElementsByClassName("SeekBar")[0];
   //if (seekBar.classList.contains("is-disabled")) {
   //  seekBar.classList.remove("is-disabled");
@@ -76,7 +100,7 @@ function PREPARE(observe) {
     () => {
       setting.style.display = "none";
     },
-    false
+    false,
   );
   OLD_DATE.min = "2007-03-03";
   OLD_DATE.max = new Date().getFullYear() + "-12-31";
@@ -118,7 +142,7 @@ function PREPARE(observe) {
           nicoru_limit: 0,
           premium_filter: false,
           version: "7.3.3",
-        })
+        }),
       );
     } else {
       zouryou_config = JSON.parse(get_zouryou_config);
@@ -189,15 +213,15 @@ function PREPARE(observe) {
     if (ng_storage == null || ng_storage == "[null]") {
       localStorage.setItem(
         "ng_storage",
-        JSON.stringify({ command: [], comment: [], easy: false })
+        JSON.stringify({ command: [], comment: [], easy: false }),
       );
     } else {
       ngarray = JSON.parse(ng_storage);
       // 保存済みのnullや空の項目を除去し、削除ボタンの位置も合わせる。
       for (const type of ["command", "comment"]) {
-        ngarray[type] = (Array.isArray(ngarray[type]) ? ngarray[type] : []).filter(
-          (value) => typeof value === "string" && value.trim() !== ""
-        );
+        ngarray[type] = (
+          Array.isArray(ngarray[type]) ? ngarray[type] : []
+        ).filter((value) => typeof value === "string" && value.trim() !== "");
       }
       localStorage.setItem("ng_storage", JSON.stringify(ngarray));
       ngarray.command.forEach((command) => NG_LIST_COMMAND.push(command));
@@ -232,7 +256,12 @@ function PREPARE(observe) {
     CONFIG();
   }
   document.getElementById("reset_local_storage").onclick = () => {
-    if (!window.confirm("コメント増量の設定とNGリストを初期化し、ページを再読み込みします。よろしいですか？")) return;
+    if (
+      !window.confirm(
+        "コメント増量の設定とNGリストを初期化し、ページを再読み込みします。よろしいですか？",
+      )
+    )
+      return;
     // この拡張機能が使うキーだけを削除し、初期設定で読み込み直す。
     localStorage.removeItem("zouryou_config");
     localStorage.removeItem("ng_storage");
@@ -348,7 +377,7 @@ function PREPARE(observe) {
         zouryou_config[bar_stroke[i].id] = e.target.value;
         localStorage.setItem("zouryou_config", JSON.stringify(zouryou_config));
       },
-      false
+      false,
     );
   }
 
@@ -407,11 +436,11 @@ function PREPARE(observe) {
 
   ////
   let fullScreenButton = document.querySelector(
-    "[aria-label='全画面表示する']"
+    "[aria-label='全画面表示する']",
   );
   if (fullScreenButton == undefined) {
     fullScreenButton = document.querySelector(
-      "[aria-label='全画面表示を終了']"
+      "[aria-label='全画面表示を終了']",
     );
   }
   let fullScreen = new MutationObserver(function () {
@@ -421,33 +450,63 @@ function PREPARE(observe) {
         ? "visible"
         : "hidden";
   });
-  fullScreen.observe(fullScreenButton, { childList: true, subtree: true });
+  if (fullScreenButton) {
+    fullScreen.observe(fullScreenButton, {
+      attributes: true,
+      childList: true,
+      subtree: true,
+    });
+  }
+  document.addEventListener("fullscreenchange", () => {
+    setting.style.visibility = document.fullscreenElement
+      ? "hidden"
+      : "visible";
+  });
 
-  setTimeout(function () {
-    function ShowButton() {
-      console.log(1);
-      if (document.getElementById("AllCommentViewButton") != undefined) return;
-      let settingButton = document.querySelector("[aria-label='設定']");
-      if (settingButton != undefined) {
-        document.querySelector("[aria-label='設定']").insertAdjacentHTML(
-          "beforebegin",
-          `
-          <button aria-label="コメント増量" style="width:26px;color:white" data-scope="tooltip" data-part="trigger" id="AllCommentViewButton" dir="ltr" data-state="closed" class="cursor_pointer" type="button" tabindex="0" title="コメント増量">
-          ALL
-          </button> 
-        `
-        );
-        document.getElementById("AllCommentViewButton").addEventListener(
-          "click",
-          () => {
-            setting.style.display = "block";
-          },
-          false
-        );
+  // タブ切り替えでタイトルが作り直された場合もボタンを設置する。
+  function ShowButton() {
+    if (document.getElementById("AllCommentViewButton")) return;
+    const currentPlayer = getPlayerElements();
+    if (!currentPlayer.buttonHost) return;
+    const button = document.createElement("button");
+    button.id = "AllCommentViewButton";
+    button.type = "button";
+    button.textContent = "ALL";
+    button.title = "コメント増量";
+    button.setAttribute("aria-label", "コメント増量");
+    button.style.cssText =
+      "width:32px;color:inherit;cursor:pointer;flex-shrink:0;";
+    button.addEventListener("click", () => {
+      setting.style.display = "block";
+    });
+    if (currentPlayer.isMint) currentPlayer.buttonHost.appendChild(button);
+    else currentPlayer.buttonHost.before(button);
+  }
+  ShowButton();
+  const playerObserver = new MutationObserver(() => {
+    const currentPlayer = getPlayerElements();
+    setting.classList.toggle("zouryou-mint-settings", currentPlayer.isMint);
+    // サイドバーが差し替えられても、設定と入力値を保持する。
+    if (
+      currentPlayer.settings &&
+      setting.parentElement !== currentPlayer.settings
+    ) {
+      if (
+        currentPlayer.isMint &&
+        getComputedStyle(currentPlayer.settings).position === "static"
+      ) {
+        currentPlayer.settings.style.position = "relative";
       }
+      currentPlayer.settings.prepend(setting);
     }
-
     ShowButton();
-  }, 1000);
+    attachCommentOverlay();
+    syncCommentVisibility();
+  });
+  playerObserver.observe(document.body, {
+    childList: true,
+    subtree: true,
+    attributes: true,
+    attributeFilter: ["aria-label"],
+  });
 }
-

@@ -30,13 +30,8 @@ function ADDCOMMENT(val, pos, mail) {
 let commentDrawTimer;
 function PLAYCOMMENT() {
   clearTimeout(commentDrawTimer);
-  document.getElementsByClassName("CustomVideoContainer")[0].style.display =
-    "block";
-  const commentRenderers = document.getElementsByClassName("CommentRenderer");
-  if (commentRenderers.length === 0) {
-    PlayerContainer = document.querySelector('[data-name="content"]');
-    PlayerContainer.children[0].after(CustomVideoContainer);
-  }
+  attachCommentOverlay();
+  CustomVideoContainer.style.display = "block";
 
   zouryouCanvasElement = document.getElementById("zouryou_comment");
 
@@ -61,7 +56,7 @@ function PLAYCOMMENT() {
     link.style.visibility = "visible";
     link.href = URL.createObjectURL(blob);
 
-    videoElement = document.querySelector('[data-name="video-content"]');
+    attachCommentOverlay();
     aspect = Number(videoElement.videoWidth) / Number(videoElement.videoHeight);
     console.log(aspect);
 
@@ -83,7 +78,7 @@ function PLAYCOMMENT() {
       niconiComments.drawCanvas(Math.floor(videoElement.currentTime * 100));
       const fps = Number(fpsInput.value);
       const frameInterval = 1000 / (Number.isFinite(fps) && fps > 0 ? fps : 30);
-      // Timers also run during background/PiP playback; include drawing in the budget.
+      // 背景やPiPでの再生中も描画を続け、描画時間を待機時間に含める。
       commentDrawTimer = setTimeout(
         draw,
         Math.max(0, frameInterval - (performance.now() - startedAt))
@@ -92,7 +87,7 @@ function PLAYCOMMENT() {
     draw();
 
     console.log(videoElement);
-    document.querySelector('[data-name="comment"]').style.display = "none";
+    syncCommentVisibility();
     //document.getElementsByClassName("CommentRenderer")[0].style.display =
     //  "none";
     //
@@ -123,22 +118,7 @@ function PLAYCOMMENT() {
       comment_list_active = false;
     });
   LIST_COMMENT();
-  let Comment_Show_Button = document.querySelector(
-    "[aria-label='コメントを非表示にする']"
-  );
-  if (Comment_Show_Button == undefined) {
-    Comment_Show_Button = document.querySelector(
-      "[aria-label='コメントを表示する']"
-    );
-  }
-  let Comment_SH = new MutationObserver(function () {
-    console.log(Comment_Show_Button.getAttribute("data-state"));
-    CustomVideoContainer.style.zIndex =
-      Comment_Show_Button.getAttribute("aria-label") == "コメントを表示する"
-        ? 0
-        : 1;
-  });
-  Comment_SH.observe(Comment_Show_Button, { childList: true, subtree: true });
+  syncCommentVisibility();
   pipVideoElement.style.display = document.getElementById("iscanvas").checked
     ? "block"
     : "none";

@@ -16,6 +16,7 @@
         "lib/body-pix.js",
         "lib/niconicomments.js",
         "scripts/state.js",
+        "scripts/player-adapter.js",
         "scripts/comment-loader.js",
         "scripts/comment-export.js",
         "scripts/comment-player.js",

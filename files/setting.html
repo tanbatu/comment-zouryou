@@ -140,8 +140,7 @@
 
 
 
-        /* Mixins */
-        /* bg shortcodes */
+        /* ボタン背景のグラデーション */
         .bg-gradient1 span,
         .bg-gradient1:before {
             background: #52A0FD;
@@ -160,7 +159,7 @@
             background: linear-gradient(to right, #fa6c9f 0%, #ffe140 80%, #ffe140 100%);
         }
 
-        /* General */
+        /* ボタンの共通レイアウト */
         .wrapper {
             text-align: center;
             transform-style: perserve-3d;
@@ -176,7 +175,7 @@
             text-decoration: none;
         }
 
-        /* fancy Button */
+        /* 読み込みボタン */
         .fancy-button {
             display: inline-block;
             font-family: "Montserrat", Helvetica, Arial, sans-serif;
@@ -414,6 +413,152 @@
             color: white;
             background: linear-gradient(315deg, #929ffb, #5ac0df);
         }
+
+        /* mintの見出しやフォームの装飾を設定画面内だけで上書きする。 */
+        #allcommentsetting.zouryou-mint-settings {
+            font-family: Arial, "Helvetica Neue", sans-serif;
+            font-size: var(--zouryou-base-font-size, inherit);
+            line-height: 1.5;
+            color: #4b4b4b;
+            text-align: left;
+            isolation: isolate;
+        }
+
+        #allcommentsetting.zouryou-mint-settings * {
+            box-sizing: border-box;
+        }
+
+        #allcommentsetting.zouryou-mint-settings :is(div, p, h3, h5, ul, li) {
+            margin: 0;
+            padding: 0;
+        }
+
+        #allcommentsetting.zouryou-mint-settings :is(h3, h5) {
+            border: 0;
+            background: transparent;
+            font-family: inherit;
+            font-size: inherit;
+            font-weight: normal;
+            line-height: inherit;
+        }
+
+        #allcommentsetting.zouryou-mint-settings .scroll :is(h3, h5) {
+            margin: 0 !important;
+            padding: 0 !important;
+        }
+
+        #allcommentsetting.zouryou-mint-settings .scroll b {
+            font-weight: normal;
+        }
+
+        /* 設定欄の見出し、説明、入力欄の文字色をページのp要素に揃える。 */
+        #allcommentsetting.zouryou-mint-settings .scroll,
+        #allcommentsetting.zouryou-mint-settings .scroll > div {
+            color: var(--zouryou-base-text-color, #4b4b4b) !important;
+        }
+
+        #allcommentsetting.zouryou-mint-settings .scroll :is(p, h3, h5, b, label, small, li, input, select, a, button) {
+            color: inherit !important;
+        }
+
+        #allcommentsetting.zouryou-mint-settings :is(input, select, button, label) {
+            font-family: inherit;
+            font-size: inherit;
+            line-height: inherit;
+        }
+
+        #allcommentsetting.zouryou-mint-settings :is(input, select) {
+            color: inherit;
+            background-color: transparent;
+            border-radius: 0;
+            box-shadow: none;
+        }
+
+        #allcommentsetting.zouryou-mint-settings input:not([type="range"]):not([type="checkbox"]),
+        #allcommentsetting.zouryou-mint-settings select {
+            padding: 0;
+            min-height: 0;
+            height: auto;
+        }
+
+        #allcommentsetting.zouryou-mint-settings input[type="checkbox"] {
+            appearance: auto;
+            width: 13px;
+            height: 13px;
+            min-width: 0;
+            min-height: 0;
+            margin: 0;
+            padding: 0;
+            vertical-align: middle;
+        }
+
+        #allcommentsetting.zouryou-mint-settings input[type="range"] {
+            appearance: auto;
+            width: 60%;
+            height: 16px;
+            min-height: 0;
+            margin: 0 2px;
+            padding: 0;
+            vertical-align: middle;
+        }
+
+        /* 読み込み倍率はフォームの共通サイズに揃えず、大きく表示する。 */
+        #allcommentsetting.zouryou-mint-settings #load_num {
+            width: 50%;
+            font-size: 85px;
+            line-height: normal;
+            color: #fdfdfd;
+            border: 0;
+            text-align: right;
+        }
+
+        #allcommentsetting.zouryou-mint-settings .DateTimeInput,
+        #allcommentsetting.zouryou-mint-settings .DateTimeInput > div {
+            display: block;
+        }
+
+        #allcommentsetting.zouryou-mint-settings .DateTimeInput input {
+            display: inline-block;
+            width: auto;
+            border: 0;
+            appearance: auto;
+        }
+
+        #allcommentsetting.zouryou-mint-settings .scroll {
+            position: relative;
+            display: block;
+            margin-top: 20px;
+            padding: 0;
+            max-height: none;
+            scrollbar-gutter: stable;
+        }
+
+        #allcommentsetting.zouryou-mint-settings :is(#ng_comment, #ng_command) {
+            list-style: none;
+            margin: 0;
+            padding: 0;
+        }
+
+        #allcommentsetting.zouryou-mint-settings :is(#ng_comment, #ng_command) li {
+            position: relative;
+            padding: 2px;
+        }
+
+        #allcommentsetting.zouryou-mint-settings .wrapper {
+            margin: 0 10px;
+        }
+
+        #allcommentsetting.zouryou-mint-settings .fancy-button {
+            display: block;
+            width: 100%;
+            font-size: 16px;
+        }
+
+        #allcommentsetting.zouryou-mint-settings .fancy-button span {
+            box-sizing: border-box;
+            width: 100%;
+            padding: 13px 0;
+        }
     </style>
     <div id="allcommentsetting" style="
     border-radius: 8px;
@@ -481,7 +626,7 @@
                     ※20倍ほどが<br>　目安です。</p>
             </div>
         </div>
-        <div class="beforewave" style="border-radius:8px 8px 0px 0px;"></div>
+        <div class="beforewave"></div>
         <div class="card">
             <div
                 style="height: 50%;margin-top: 20px;pointer-events: none;width: 97%;background: linear-gradient( white, #ffffff00);">
@@ -638,6 +783,9 @@
                     <div style="margin-top:6px;">
                         <input type="checkbox" id="isauto" /><label for="isauto">自動読み込み</label>
                         <input type="number" id="auto_num" style="width:40px;" min="2" value="2">倍
+                    </div>
+                    <div style="margin-top:12px;">
+                        <button type="button" id="reset_local_storage">設定とNGリストを初期化</button>
                     </div>
                     <br>
                     <small><b><a target="_blank"
