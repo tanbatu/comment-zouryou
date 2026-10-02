@@ -16,11 +16,17 @@ function resetWatchPage() {
   cancelCommentLoad();
   stopCommentPlayback();
   COMMENT = [];
+  videoCitations = [];
+  localCommentFiles = [];
   apiData = undefined;
   if (!prepared) return;
   CustomVideoContainer.style.display = "none";
   pipVideoElement.style.display = "none";
   const setting = zouryouSetting;
+  setting.querySelector("#video_citation_list")?.replaceChildren();
+  setting.querySelector("#local_comment_list")?.replaceChildren();
+  const localFiles = setting.querySelector("#local_comment_files");
+  if (localFiles) localFiles.value = "";
   setting.style.display = "none";
   const loaded = setting.querySelector("#loaded");
   loaded.style.zIndex = "0";

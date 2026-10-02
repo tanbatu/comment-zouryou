@@ -222,6 +222,34 @@ function PREPARE(observe) {
     }
   }
 
+  const citationList = document.getElementById("video_citation_list");
+  function saveVideoCitations() {
+    videoCitations = Array.from(citationList.children, (row) => ({
+      videoId: row.querySelector(".video-citation-id").value,
+      multiplier: row.querySelector(".video-citation-multiplier").value,
+    }));
+  }
+  function addVideoCitation(citation = {}) {
+    const row = document.createElement("div");
+    row.className = "video-citation-row";
+    row.innerHTML = `<input type="text" class="video-citation-id" placeholder="sm12345678" aria-label="引用する動画のsm番号" pattern="sm[0-9]+">
+      <input type="number" class="video-citation-multiplier" min="1" step="1" aria-label="引用する動画の倍数"><span>倍</span>
+      <button type="button" class="video-citation-button" aria-label="この動画引用を削除">削除</button>`;
+    row.querySelector(".video-citation-id").value = citation.videoId || "";
+    row.querySelector(".video-citation-multiplier").value = citation.multiplier ?? 1;
+    row.addEventListener("input", saveVideoCitations);
+    row.querySelector("button").onclick = () => {
+      row.remove();
+      saveVideoCitations();
+    };
+    citationList.appendChild(row);
+  }
+  document.getElementById("add_video_citation").onclick = () => {
+    addVideoCitation();
+    saveVideoCitations();
+    citationList.lastElementChild.querySelector("input").focus();
+  };
+
   let ng_storage = localStorage.getItem("ng_storage");
   let ngarray,
     SETTING_NG_LIST_COMMENT,
@@ -293,6 +321,36 @@ function PREPARE(observe) {
     ng_element();
     CONFIG();
   }
+  videoCitations = [];
+  localCommentFiles = [];
+  const localFileInput = document.getElementById("local_comment_files");
+  document.getElementById("add_local_comment_files").onclick = () => localFileInput.click();
+  const localFileList = document.getElementById("local_comment_list");
+  function renderLocalFiles() {
+    localFileList.replaceChildren();
+    localCommentFiles.forEach((file, index) => {
+      const row = document.createElement("div");
+      row.className = "video-citation-row";
+      const name = document.createElement("span");
+      name.style.cssText = "flex:1;min-width:0;overflow-wrap:anywhere";
+      name.textContent = file.name;
+      const remove = document.createElement("button");
+      remove.type = "button";
+      remove.className = "video-citation-button";
+      remove.textContent = "削除";
+      remove.onclick = () => {
+        localCommentFiles.splice(index, 1);
+        renderLocalFiles();
+      };
+      row.append(name, remove);
+      localFileList.appendChild(row);
+    });
+  }
+  localFileInput.onchange = () => {
+    localCommentFiles.push(...localFileInput.files);
+    localFileInput.value = "";
+    renderLocalFiles();
+  };
   document.getElementById("reset_local_storage").onclick = () => {
     if (
       !window.confirm(

@@ -21,6 +21,9 @@ let CommentRenderer,
   aspect,
   apiData;
 let COMMENT = [];
+// 引用元は保存せず、現在の視聴ページだけで保持する。
+let videoCitations = [];
+let localCommentFiles = [];
 let CommentLimit = 40;
 
 let niconiComments, comment_list_active;

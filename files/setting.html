@@ -16,639 +16,676 @@
         display: none;
         margin-bottom: 17px;
       ">
-    <!-- 設定画面を別のサイドバーへ移しても、CSSを一緒に保持する。 -->
-    <style>
-        #allcommentsetting {
-            font-family: "Helvetica Neue", Helvetica;
-            height: 100%;
-        }
-
-        #load_num::-webkit-outer-spin-button,
-        #load_num::-webkit-inner-spin-button {
-            -webkit-appearance: none;
-            margin: 0;
-        }
-
-        #load_num {
-            -moz-appearance: textfield;
-        }
-
-        #load_num {
-            width: 50%;
-            font-size: 85px;
-            background-color: transparent;
-            border: transparent;
-            text-align: right;
-            outline: none;
-            color: #fdfdfd;
-        }
-
-        ::placeholder {
-            color: rgb(255, 255, 255);
-        }
-
-        .deletebutton {
-            width: 10px;
-            border: #007dff 1px solid;
-            margin-top: 3px;
-            background-color: white;
-            float: right;
-            height: 10px;
-
-        }
-
-        #ng_list ul li {
-            padding: 2px;
-            border-bottom: rgb(233, 233, 233) 1px solid;
-        }
-
-        #ng_list ul li a {
-            position: absolute;
-            right: 8px;
-            font-weight: bold;
-        }
-
-        .ng_check {
-            margin-left: 7px;
-            width: 32%;
-            display: block;
-            float: left
-        }
-
-
-        .ng_check:nth-of-type(3n-2) {
-            margin-left: 0px;
-            width: 28%
-        }
-
-
-
-        .ng_color {
-            margin-left: 2px;
-        }
-
-        .ng_color:nth-child(10n-9) {
-            margin-left: 0px;
-            width: 28%
-        }
-
-
-        .ng_color label input[type="checkbox"] {
-            position: absolute;
-            opacity: 0;
-        }
-
-        .ng_color label input[type="checkbox"]+span {
-            display: inline-block;
-            z-index: 200;
-            width: 14px;
-            background-color: blue;
-            border: 2px solid rgb(0, 0, 0);
-            height: 14px;
-
-        }
-
-
-
-        .ng_text label input[type="checkbox"] {
-            position: absolute;
-            opacity: 0;
-        }
-
-        .ng_text label input[type="checkbox"]+span {
-            position: relative;
-            display: block;
-            z-index: 200;
-            flex: 1;
-            margin-left: 3px;
-            width: 51px;
-            background-color: #fff;
-            border: 2px solid #d0d4d9;
-            border-radius: 0.1em;
-            height: 28px;
-        }
-
-        .ng_text label input[type="checkbox"]:checked+span {
-
-            border: 2px solid #007dff
-        }
-
-
-        .ng_text label input[type="checkbox"]+span span {
-            position: absolute;
-            top: 52%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            font-weight: bold;
-            color: rgb(110, 110, 110);
-        }
-
-        .ng_text:nth-of-type(3n-2) label input[type="checkbox"]+span {
-            margin-left: 0px;
-
-        }
-
-
-
-        /* ボタン背景のグラデーション */
-        .bg-gradient1 span,
-        .bg-gradient1:before {
-            background: #52A0FD;
-            background: linear-gradient(to right, #52A0FD 0%, #00e2fa 80%, #00e2fa 100%);
-        }
-
-        .bg-gradient2 span,
-        .bg-gradient2:before {
-            background: #44ea76;
-            background: linear-gradient(to right, #44ea76 0%, #39fad7 80%, #39fad7 100%);
-        }
-
-        .bg-gradient3 span,
-        .bg-gradient3:before {
-            background: #fa6c9f;
-            background: linear-gradient(to right, #fa6c9f 0%, #ffe140 80%, #ffe140 100%);
-        }
-
-        /* ボタンの共通レイアウト */
-        .wrapper {
-            text-align: center;
-            transform-style: perserve-3d;
-        }
-
-        a {
-            text-decoration: none;
-        }
-
-        a:hover,
-        a:focus,
-        a:active {
-            text-decoration: none;
-        }
-
-        /* 読み込みボタン */
-        .fancy-button {
-            display: inline-block;
-            font-family: "Montserrat", Helvetica, Arial, sans-serif;
-            font-size: 18px;
-            letter-spacing: 0.03em;
-            text-transform: uppercase;
-            color: #ffffff;
-        }
-
-
-
-
-        .fancy-button i {
-            margin-top: -1px;
-            margin-right: 20px;
-            font-size: 1.265em;
-            vertical-align: middle;
-        }
-
-        .fancy-button span {
-            display: inline-block;
-            padding: 13px 60px;
-            border-radius: 0.2em;
-            width: 297px;
-            position: relative;
-            z-index: 2;
-            box-sizing: initial;
-            will-change: transform, filter;
-            transform-style: preserve-3d;
-            transition: all 0.3s ease-out;
-            font-weight: bold;
-            text-shadow: 0px 0px 2px #00000031;
-        }
-
-        .fancy-button:focus,
-        .fancy-button:active {
-            color: #ffffff;
-        }
-
-        .fancy-button:hover {
-            color: #ffffff;
-        }
-
-        .fancy-button:hover span {
-            filter: brightness(1.05) contrast(1.05);
-            transform: scale(0.95);
-        }
-
-        .fancy-button:hover:before {
-            bottom: 0;
-            filter: blur(10px) brightness(0.95);
-        }
-
-        .fancy-button.pop-onhover:before {
-            opacity: 0;
-            bottom: 10px;
-        }
-
-        .fancy-button.pop-onhover:hover:before {
-            bottom: -7px;
-            opacity: 1;
-            filter: blur(20px);
-        }
-
-        .fancy-button.pop-onhover:hover span {
-            transform: scale(1.04);
-        }
-
-        .fancy-button.pop-onhover:hover:active span {
-            filter: brightness(1) contrast(1);
-            transform: scale(1);
-            transition: all 0.15s ease-out;
-        }
-
-        .fancy-button.pop-onhover:hover:active:before {
-            bottom: 0;
-            filter: blur(10px) brightness(0.95);
-            transition: all 0.2s ease-out;
-        }
-
-        .card {
-            position: absolute;
-            overflow: hidden;
-            height: 50px;
-            width: 100%;
-            z-index: 0;
-        }
-
-        .card .wave {
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 50px;
-
-        }
-
-        .beforewave {
-            height: 120px;
-            width: 100%;
-            background: rgb(107, 158, 227);
-            background: linear-gradient(180deg, rgb(76 164 253) 32%, rgb(94 207 252) 100%)
-        }
-
-        #wave1 {
-            animation: animate 10s linear infinite;
-            opacity: 0.6;
-        }
-
-        #wave2 {
-            animation: animate 15s linear infinite reverse;
-            opacity: 0.6;
-        }
-
-        @keyframes animate {
-            0% {
-                background-position-x: 0px;
+        <!-- 設定画面を別のサイドバーへ移しても、CSSを一緒に保持する。 -->
+        <style>
+            #allcommentsetting {
+                font-family: "Helvetica Neue", Helvetica;
+                height: 100%;
             }
 
-            100% {
-                background-position-x: 1000px;
+            #allcommentsetting .video-citation-row {
+                display: flex;
+                align-items: center;
+                gap: 6px;
+                margin: 8px 0;
             }
-        }
 
-        #CommentLoadingScreenWrapper {
-            position: absolute;
-            height: calc(100% - 32px);
-            background: rgba(0, 0, 0, .9);
-            z-index: 6;
-            font-size: 20px;
-            color: black;
-            display: none;
-            width: calc(100% - 64px);
-            top: 50%;
-            left: 50%;
-            padding: 16px 24px;
-            overflow: auto;
-            transform: translate(-50%, -50%);
-            pointer-events: all;
-        }
+            #allcommentsetting .video-citation-id {
+                flex: 1;
+                min-width: 0;
+                width: 0;
+            }
 
-        #CommentLoadingScreen {
-            color: white;
-            line-height: 1.2;
-            font-family: Courier New, Consolas, monospace;
-            font-size: 11px;
-        }
+            #allcommentsetting .video-citation-multiplier {
+                width: 60px;
+                min-width: 0;
+            }
 
-        #loading {
-            position: absolute;
-            width: 100%;
-            display: none;
-            height: 100%;
-            text-align: center;
-            background-color: #00000075;
-            z-index: 300;
-        }
+            #allcommentsetting .video-citation-row input {
+                box-sizing: border-box;
+                padding: 4px;
+                border: 1px solid #bbb;
+                border-radius: 3px;
+            }
 
-        .list_comment {
-            border-bottom: solid 1px rgb(209, 209, 209);
-            color: black;
-        }
+            #allcommentsetting .video-citation-row input::placeholder {
+                color: #888;
+            }
 
-        .list_comment p {
-            padding: 4px 0px;
-        }
+            #allcommentsetting .video-citation-button {
+                padding: 3px 8px;
+                border: 1px solid #bbb;
+                border-radius: 3px;
+                cursor: pointer;
+            }
+
+            #load_num::-webkit-outer-spin-button,
+            #load_num::-webkit-inner-spin-button {
+                -webkit-appearance: none;
+                margin: 0;
+            }
+
+            #load_num {
+                -moz-appearance: textfield;
+            }
+
+            #load_num {
+                width: 50%;
+                font-size: 85px;
+                background-color: transparent;
+                border: transparent;
+                text-align: right;
+                outline: none;
+                color: #fdfdfd;
+            }
+
+            ::placeholder {
+                color: rgb(255, 255, 255);
+            }
+
+            .deletebutton {
+                width: 10px;
+                border: #007dff 1px solid;
+                margin-top: 3px;
+                background-color: white;
+                float: right;
+                height: 10px;
+
+            }
+
+            #ng_list ul li {
+                padding: 2px;
+                border-bottom: rgb(233, 233, 233) 1px solid;
+            }
+
+            #ng_list ul li a {
+                position: absolute;
+                right: 8px;
+                font-weight: bold;
+            }
+
+            .ng_check {
+                margin-left: 7px;
+                width: 32%;
+                display: block;
+                float: left
+            }
+
+
+            .ng_check:nth-of-type(3n-2) {
+                margin-left: 0px;
+                width: 28%
+            }
 
 
 
-        #bottom {
-            margin: 0px 2px;
-            height: 100%;
-            overflow: hidden;
-            width: 100%;
-            position: absolute;
-        }
+            .ng_color {
+                margin-left: 2px;
+            }
 
-        .scroll {
-            margin-top: 20px;
-        }
+            .ng_color:nth-child(10n-9) {
+                margin-left: 0px;
+                width: 28%
+            }
 
-        .scroll::-webkit-scrollbar {
-            width: 9px;
-        }
 
-        .scroll::-webkit-scrollbar-track {
-            background-color: #e4e4e4;
-            border-radius: 100px;
-        }
+            .ng_color label input[type="checkbox"] {
+                position: absolute;
+                opacity: 0;
+            }
 
-        .scroll::-webkit-scrollbar-thumb {
-            background-color: #818181;
-            border-radius: 100px;
-        }
+            .ng_color label input[type="checkbox"]+span {
+                display: inline-block;
+                z-index: 200;
+                width: 14px;
+                background-color: blue;
+                border: 2px solid rgb(0, 0, 0);
+                height: 14px;
 
-        .CommentPanelDataGrid {
-            width: calc(100% - 1px);
-        }
+            }
 
-        .config_parts {
-            border-bottom: #4d97bb80 1px solid;
-            padding-bottom: 12px;
-        }
 
-        .wrapper_button {
-            position: absolute;
-            align-items: center;
-            justify-content: center;
-        }
 
-        .wrapper_button button {
-            width: 208px;
-            height: 27px;
-            font-family: 'Roboto', sans-serif;
-            font-size: 11px;
-            text-transform: uppercase;
-            letter-spacing: 2.5px;
-            font-weight: 500;
-            color: #000;
-            background-color: #fff;
-            border: none;
-            border-radius: 5px;
-            transition: all 0.3s ease 0s;
-            outline: none;
-        }
+            .ng_text label input[type="checkbox"] {
+                position: absolute;
+                opacity: 0;
+            }
 
-        .wrapper_button button {
-            background: linear-gradient(149deg, #efeeee, #c7f2ff);
-            color: #003b7b;
-            font-weight: bold;
-        }
+            .ng_text label input[type="checkbox"]+span {
+                position: relative;
+                display: block;
+                z-index: 200;
+                flex: 1;
+                margin-left: 3px;
+                width: 51px;
+                background-color: #fff;
+                border: 2px solid #d0d4d9;
+                border-radius: 0.1em;
+                height: 28px;
+            }
 
-        .wrapper_button button:hover {
-            transition: 0.3s;
-            color: white;
-            background: linear-gradient(315deg, #929ffb, #5ac0df);
-        }
+            .ng_text label input[type="checkbox"]:checked+span {
 
-        /* mintの見出しやフォームの装飾を設定画面内だけで上書きする。 */
-        #allcommentsetting.zouryou-mint-settings {
-            font-family: Arial, "Helvetica Neue", sans-serif;
-            font-size: var(--zouryou-base-font-size, inherit);
-            line-height: 1.5;
-            color: #4b4b4b;
-            text-align: left;
-            isolation: isolate;
-        }
+                border: 2px solid #007dff
+            }
 
-        #allcommentsetting.zouryou-mint-settings * {
-            box-sizing: border-box;
-        }
 
-        #allcommentsetting.zouryou-mint-settings :is(div, p, h3, h5, ul, li) {
-            margin: 0;
-            padding: 0;
-        }
+            .ng_text label input[type="checkbox"]+span span {
+                position: absolute;
+                top: 52%;
+                left: 50%;
+                transform: translate(-50%, -50%);
+                font-weight: bold;
+                color: rgb(110, 110, 110);
+            }
 
-        #allcommentsetting.zouryou-mint-settings :is(h3, h5) {
-            border: 0;
-            background: transparent;
-            font-family: inherit;
-            font-size: inherit;
-            font-weight: normal;
-            line-height: inherit;
-        }
+            .ng_text:nth-of-type(3n-2) label input[type="checkbox"]+span {
+                margin-left: 0px;
 
-        #allcommentsetting.zouryou-mint-settings .scroll :is(h3, h5) {
-            margin: 0 !important;
-            padding: 0 !important;
-        }
+            }
 
-        #allcommentsetting.zouryou-mint-settings .scroll b {
-            font-weight: normal;
-        }
 
-        /* 設定欄の見出し、説明、入力欄の文字色をページのp要素に揃える。 */
-        #allcommentsetting.zouryou-mint-settings .scroll,
-        #allcommentsetting.zouryou-mint-settings .scroll>div {
-            color: var(--zouryou-base-text-color, #4b4b4b) !important;
-        }
 
-        #allcommentsetting.zouryou-mint-settings .scroll :is(p, h3, h5, b, label, small, li, input, select, a, button) {
-            color: inherit !important;
-        }
+            /* ボタン背景のグラデーション */
+            .bg-gradient1 span,
+            .bg-gradient1:before {
+                background: #52A0FD;
+                background: linear-gradient(to right, #52A0FD 0%, #00e2fa 80%, #00e2fa 100%);
+            }
 
-        #allcommentsetting.zouryou-mint-settings :is(input, select, button, label) {
-            font-family: inherit;
-            font-size: inherit;
-            line-height: inherit;
-        }
+            .bg-gradient2 span,
+            .bg-gradient2:before {
+                background: #44ea76;
+                background: linear-gradient(to right, #44ea76 0%, #39fad7 80%, #39fad7 100%);
+            }
 
-        #allcommentsetting.zouryou-mint-settings :is(input, select) {
-            color: inherit;
-            background-color: transparent;
-            border-radius: 0;
-            box-shadow: none;
-        }
+            .bg-gradient3 span,
+            .bg-gradient3:before {
+                background: #fa6c9f;
+                background: linear-gradient(to right, #fa6c9f 0%, #ffe140 80%, #ffe140 100%);
+            }
 
-        #allcommentsetting.zouryou-mint-settings input:not([type="range"]):not([type="checkbox"]),
-        #allcommentsetting.zouryou-mint-settings select {
-            padding: 0;
-            min-height: 0;
-            height: auto;
-        }
+            /* ボタンの共通レイアウト */
+            .wrapper {
+                text-align: center;
+                transform-style: perserve-3d;
+            }
 
-        #allcommentsetting.zouryou-mint-settings input[type="checkbox"] {
-            appearance: auto;
-            width: 13px;
-            height: 13px;
-            min-width: 0;
-            min-height: 0;
-            margin: 0;
-            padding: 0;
-            vertical-align: middle;
-        }
+            a {
+                text-decoration: none;
+            }
 
-        #allcommentsetting.zouryou-mint-settings input[type="range"] {
-            appearance: auto;
-            width: 60%;
-            height: 16px;
-            min-height: 0;
-            margin: 0 2px;
-            padding: 0;
-            vertical-align: middle;
-        }
+            a:hover,
+            a:focus,
+            a:active {
+                text-decoration: none;
+            }
 
-        /* 読み込み倍率はフォームの共通サイズに揃えず、大きく表示する。 */
-        #allcommentsetting.zouryou-mint-settings #load_num {
-            width: 50%;
-            font-size: 85px;
-            line-height: normal;
-            color: #fdfdfd;
-            border: 0;
-            text-align: right;
-        }
+            /* 読み込みボタン */
+            .fancy-button {
+                display: inline-block;
+                font-family: "Montserrat", Helvetica, Arial, sans-serif;
+                font-size: 18px;
+                letter-spacing: 0.03em;
+                text-transform: uppercase;
+                color: #ffffff;
+            }
 
-        #allcommentsetting.zouryou-mint-settings .DateTimeInput,
-        #allcommentsetting.zouryou-mint-settings .DateTimeInput>div {
-            display: block;
-        }
 
-        #allcommentsetting.zouryou-mint-settings .DateTimeInput input {
-            display: inline-block;
-            width: auto;
-            border: 0;
-            appearance: auto;
-        }
 
-        #allcommentsetting.zouryou-mint-settings .scroll {
-            position: relative;
-            display: block;
-            margin-top: 20px;
-            padding: 0;
-            max-height: none;
-            scrollbar-gutter: stable;
-        }
 
-        #allcommentsetting.zouryou-mint-settings :is(#ng_comment, #ng_command) {
-            list-style: none;
-            margin: 0;
-            padding: 0;
-        }
+            .fancy-button i {
+                margin-top: -1px;
+                margin-right: 20px;
+                font-size: 1.265em;
+                vertical-align: middle;
+            }
 
-        #allcommentsetting.zouryou-mint-settings :is(#ng_comment, #ng_command) li {
-            position: relative;
-            padding: 2px;
-        }
+            .fancy-button span {
+                display: inline-block;
+                padding: 13px 60px;
+                border-radius: 0.2em;
+                width: 297px;
+                position: relative;
+                z-index: 2;
+                box-sizing: initial;
+                will-change: transform, filter;
+                transform-style: preserve-3d;
+                transition: all 0.3s ease-out;
+                font-weight: bold;
+                text-shadow: 0px 0px 2px #00000031;
+            }
 
-        #allcommentsetting.zouryou-mint-settings .wrapper {
-            margin: 0 10px;
-        }
+            .fancy-button:focus,
+            .fancy-button:active {
+                color: #ffffff;
+            }
 
-        #allcommentsetting.zouryou-mint-settings .fancy-button {
-            display: block;
-            width: 100%;
-            font-size: 16px;
-        }
+            .fancy-button:hover {
+                color: #ffffff;
+            }
 
-        #allcommentsetting.zouryou-mint-settings .fancy-button span {
-            box-sizing: border-box;
-            width: 100%;
-            padding: 13px 0;
-        }
-        #allcommentsetting.zouryou-dark {
-            color-scheme: dark;
-            background-color: #1b1f22 !important;
-            color: #e1e7ef;
-            --zouryou-base-text-color: #e1e7ef !important;
-            --zouryou-nicoru-color: 117, 89, 20;
-        }
+            .fancy-button:hover span {
+                filter: brightness(1.05) contrast(1.05);
+                transform: scale(0.95);
+            }
 
-        #allcommentsetting.zouryou-dark :is(.settings-content, .list_comment) {
-            color: #e1e7ef !important;
-        }
+            .fancy-button:hover:before {
+                bottom: 0;
+                filter: blur(10px) brightness(0.95);
+            }
 
-        #allcommentsetting.zouryou-dark :is(.settings-footer, #wrapper_buttons, #comment_list, #comment_list_header) {
-            background-color: #252525 !important;
-            color: #e1e7ef;
-        }
+            .fancy-button.pop-onhover:before {
+                opacity: 0;
+                bottom: 10px;
+            }
 
-        #allcommentsetting.zouryou-dark .beforewave {
-            background: linear-gradient(180deg, #182c49 32%, #1e353b 100%);
-        }
+            .fancy-button.pop-onhover:hover:before {
+                bottom: -7px;
+                opacity: 1;
+                filter: blur(20px);
+            }
 
-        #allcommentsetting.zouryou-dark .wave {
-            filter: brightness(0.3) saturate(0.65);
-        }
+            .fancy-button.pop-onhover:hover span {
+                transform: scale(1.04);
+            }
 
-        #allcommentsetting.zouryou-dark .wave-fade {
-            background: linear-gradient(#181e28, #181e2800) !important;
-        }
+            .fancy-button.pop-onhover:hover:active span {
+                filter: brightness(1) contrast(1);
+                transform: scale(1);
+                transition: all 0.15s ease-out;
+            }
 
-        #allcommentsetting.zouryou-dark :is(.bg-gradient1 span, .bg-gradient1:before, #progress_bar) {
-            background: linear-gradient(120deg, #28466f, #256475) !important;
-        }
+            .fancy-button.pop-onhover:hover:active:before {
+                bottom: 0;
+                filter: blur(10px) brightness(0.95);
+                transition: all 0.2s ease-out;
+            }
 
-        #allcommentsetting.zouryou-dark .wrapper_button button {
-            background: linear-gradient(149deg, #293448, #254a59);
-            color: #d9edf9;
-        }
+            .card {
+                position: absolute;
+                overflow: hidden;
+                height: 50px;
+                width: 100%;
+                z-index: 0;
+            }
 
-        #allcommentsetting.zouryou-dark .wrapper_button button:hover {
-            background: linear-gradient(149deg, #35496c, #306878);
-        }
+            .card .wave {
+                position: absolute;
+                top: 0;
+                left: 0;
+                width: 100%;
+                height: 50px;
 
-        #allcommentsetting.zouryou-dark :is(input:not(#load_num):not([type="range"]):not([type="checkbox"]), select, button:not(.wrapper_button button), .ng_text label input+span) {
-            background-color: #252f3e;
-            color: #e1e7ef;
-            border-color: #52637b;
-        }
+            }
 
-        #allcommentsetting.zouryou-dark .ng_text label input:checked+span {
-            border-color: #69b6ed;
-        }
+            .beforewave {
+                height: 120px;
+                width: 100%;
+                background: rgb(107, 158, 227);
+                background: linear-gradient(180deg, rgb(76 164 253) 32%, rgb(94 207 252) 100%)
+            }
 
-        #allcommentsetting.zouryou-dark .ng_text label input+span span {
-            color: #e1e7ef;
-        }
+            #wave1 {
+                animation: animate 10s linear infinite;
+                opacity: 0.6;
+            }
 
-        #allcommentsetting.zouryou-dark :is(.list_comment, #ng_list ul li, .config_parts) {
-            border-bottom-color: #3a485b;
-        }
+            #wave2 {
+                animation: animate 15s linear infinite reverse;
+                opacity: 0.6;
+            }
 
-        #allcommentsetting.zouryou-dark :is(#ng_list, #ng_list .ngform) {
-            border-color: #3a485b !important;
-        }
+            @keyframes animate {
+                0% {
+                    background-position-x: 0px;
+                }
 
-        #allcommentsetting.zouryou-dark .settings-content a {
-            color: #8cc8f4;
-        }
+                100% {
+                    background-position-x: 1000px;
+                }
+            }
 
-        #allcommentsetting.zouryou-dark #comment_list_exit path {
-            fill: #c3cfdf;
-        }
+            #CommentLoadingScreenWrapper {
+                position: absolute;
+                height: calc(100% - 32px);
+                background: rgba(0, 0, 0, .9);
+                z-index: 6;
+                font-size: 20px;
+                color: black;
+                display: none;
+                width: calc(100% - 64px);
+                top: 50%;
+                left: 50%;
+                padding: 16px 24px;
+                overflow: auto;
+                transform: translate(-50%, -50%);
+                pointer-events: all;
+            }
 
-        #allcommentsetting.zouryou-dark .scroll::-webkit-scrollbar-track {
-            background-color: #1d1d1d;
-        }
+            #CommentLoadingScreen {
+                color: white;
+                line-height: 1.2;
+                font-family: Courier New, Consolas, monospace;
+                font-size: 11px;
+            }
 
-        #allcommentsetting.zouryou-dark .scroll::-webkit-scrollbar-thumb {
-            background-color: #52637b;
-        }
-    </style>
+            #loading {
+                position: absolute;
+                width: 100%;
+                display: none;
+                height: 100%;
+                text-align: center;
+                background-color: #00000075;
+                z-index: 300;
+            }
+
+            .list_comment {
+                border-bottom: solid 1px rgb(209, 209, 209);
+                color: black;
+            }
+
+            .list_comment p {
+                padding: 4px 0px;
+            }
+
+
+
+            #bottom {
+                margin: 0px 2px;
+                height: 100%;
+                overflow: hidden;
+                width: 100%;
+                position: absolute;
+            }
+
+            .scroll {
+                margin-top: 20px;
+            }
+
+            .scroll::-webkit-scrollbar {
+                width: 9px;
+            }
+
+            .scroll::-webkit-scrollbar-track {
+                background-color: #e4e4e4;
+                border-radius: 100px;
+            }
+
+            .scroll::-webkit-scrollbar-thumb {
+                background-color: #818181;
+                border-radius: 100px;
+            }
+
+            .CommentPanelDataGrid {
+                width: calc(100% - 1px);
+            }
+
+            .config_parts {
+                border-bottom: #4d97bb80 1px solid;
+                padding-bottom: 12px;
+            }
+
+            .wrapper_button {
+                position: absolute;
+                align-items: center;
+                justify-content: center;
+            }
+
+            .wrapper_button button {
+                width: 208px;
+                height: 27px;
+                font-family: 'Roboto', sans-serif;
+                font-size: 11px;
+                text-transform: uppercase;
+                letter-spacing: 2.5px;
+                font-weight: 500;
+                color: #000;
+                background-color: #fff;
+                border: none;
+                border-radius: 5px;
+                transition: all 0.3s ease 0s;
+                outline: none;
+            }
+
+            .wrapper_button button {
+                background: linear-gradient(149deg, #efeeee, #c7f2ff);
+                color: #003b7b;
+                font-weight: bold;
+            }
+
+            .wrapper_button button:hover {
+                transition: 0.3s;
+                color: white;
+                background: linear-gradient(315deg, #929ffb, #5ac0df);
+            }
+
+            /* mintの見出しやフォームの装飾を設定画面内だけで上書きする。 */
+            #allcommentsetting.zouryou-mint-settings {
+                font-family: Arial, "Helvetica Neue", sans-serif;
+                font-size: var(--zouryou-base-font-size, inherit);
+                line-height: 1.5;
+                color: #4b4b4b;
+                text-align: left;
+                isolation: isolate;
+            }
+
+            #allcommentsetting.zouryou-mint-settings * {
+                box-sizing: border-box;
+            }
+
+            #allcommentsetting.zouryou-mint-settings :is(div, p, h3, h5, ul, li) {
+                margin: 0;
+                padding: 0;
+            }
+
+            #allcommentsetting.zouryou-mint-settings :is(h3, h5) {
+                border: 0;
+                background: transparent;
+                font-family: inherit;
+                font-size: inherit;
+                font-weight: normal;
+                line-height: inherit;
+            }
+
+            #allcommentsetting.zouryou-mint-settings .scroll :is(h3, h5) {
+                margin: 0 !important;
+                padding: 0 !important;
+            }
+
+            #allcommentsetting.zouryou-mint-settings .scroll b {
+                font-weight: normal;
+            }
+
+            /* 設定欄の見出し、説明、入力欄の文字色をページのp要素に揃える。 */
+            #allcommentsetting.zouryou-mint-settings .scroll,
+            #allcommentsetting.zouryou-mint-settings .scroll>div {
+                color: var(--zouryou-base-text-color, #4b4b4b) !important;
+            }
+
+            #allcommentsetting.zouryou-mint-settings .scroll :is(p, h3, h5, b, label, small, li, input, select, a, button) {
+                color: inherit !important;
+            }
+
+            #allcommentsetting.zouryou-mint-settings :is(input, select, button, label) {
+                font-family: inherit;
+                font-size: inherit;
+                line-height: inherit;
+            }
+
+            #allcommentsetting.zouryou-mint-settings :is(input, select) {
+                color: inherit;
+                background-color: transparent;
+                border-radius: 0;
+                box-shadow: none;
+            }
+
+            #allcommentsetting.zouryou-mint-settings input:not([type="range"]):not([type="checkbox"]),
+            #allcommentsetting.zouryou-mint-settings select {
+                padding: 0;
+                min-height: 0;
+                height: auto;
+            }
+
+            #allcommentsetting.zouryou-mint-settings input[type="checkbox"] {
+                appearance: auto;
+                width: 13px;
+                height: 13px;
+                min-width: 0;
+                min-height: 0;
+                margin: 0;
+                padding: 0;
+                vertical-align: middle;
+            }
+
+            #allcommentsetting.zouryou-mint-settings input[type="range"] {
+                appearance: auto;
+                width: 60%;
+                height: 16px;
+                min-height: 0;
+                margin: 0 2px;
+                padding: 0;
+                vertical-align: middle;
+            }
+
+            /* 読み込み倍率はフォームの共通サイズに揃えず、大きく表示する。 */
+            #allcommentsetting.zouryou-mint-settings #load_num {
+                width: 50%;
+                font-size: 85px;
+                line-height: normal;
+                color: #fdfdfd;
+                border: 0;
+                text-align: right;
+            }
+
+            #allcommentsetting.zouryou-mint-settings .DateTimeInput,
+            #allcommentsetting.zouryou-mint-settings .DateTimeInput>div {
+                display: block;
+            }
+
+            #allcommentsetting.zouryou-mint-settings .DateTimeInput input {
+                display: inline-block;
+                width: auto;
+                border: 0;
+                appearance: auto;
+            }
+
+            #allcommentsetting.zouryou-mint-settings .scroll {
+                position: relative;
+                display: block;
+                margin-top: 20px;
+                padding: 0;
+                max-height: none;
+                scrollbar-gutter: stable;
+            }
+
+            #allcommentsetting.zouryou-mint-settings :is(#ng_comment, #ng_command) {
+                list-style: none;
+                margin: 0;
+                padding: 0;
+            }
+
+            #allcommentsetting.zouryou-mint-settings :is(#ng_comment, #ng_command) li {
+                position: relative;
+                padding: 2px;
+            }
+
+            #allcommentsetting.zouryou-mint-settings .wrapper {
+                margin: 0 10px;
+            }
+
+            #allcommentsetting.zouryou-mint-settings .fancy-button {
+                display: block;
+                width: 100%;
+                font-size: 16px;
+            }
+
+            #allcommentsetting.zouryou-mint-settings .fancy-button span {
+                box-sizing: border-box;
+                width: 100%;
+                padding: 13px 0;
+            }
+
+            #allcommentsetting.zouryou-dark {
+                color-scheme: dark;
+                background-color: #1b1f22 !important;
+                color: #e1e7ef;
+                --zouryou-base-text-color: #e1e7ef !important;
+                --zouryou-nicoru-color: 117, 89, 20;
+            }
+
+            #allcommentsetting.zouryou-dark :is(.settings-content, .list_comment) {
+                color: #e1e7ef !important;
+            }
+
+            #allcommentsetting.zouryou-dark :is(.settings-footer, #wrapper_buttons, #comment_list, #comment_list_header) {
+                background-color: #252525 !important;
+                color: #e1e7ef;
+            }
+
+            #allcommentsetting.zouryou-dark .beforewave {
+                background: linear-gradient(180deg, #182c49 32%, #1e353b 100%);
+            }
+
+            #allcommentsetting.zouryou-dark .wave {
+                filter: brightness(0.3) saturate(0.65);
+            }
+
+            #allcommentsetting.zouryou-dark .wave-fade {
+                background: linear-gradient(#181e28, #181e2800) !important;
+            }
+
+            #allcommentsetting.zouryou-dark :is(.bg-gradient1 span, .bg-gradient1:before, #progress_bar) {
+                background: linear-gradient(120deg, #28466f, #256475) !important;
+            }
+
+            #allcommentsetting.zouryou-dark .wrapper_button button {
+                background: linear-gradient(149deg, #293448, #254a59);
+                color: #d9edf9;
+            }
+
+            #allcommentsetting.zouryou-dark .wrapper_button button:hover {
+                background: linear-gradient(149deg, #35496c, #306878);
+            }
+
+            #allcommentsetting.zouryou-dark :is(input:not(#load_num):not([type="range"]):not([type="checkbox"]), select, button:not(.wrapper_button button), .ng_text label input+span) {
+                background-color: #252f3e;
+                color: #e1e7ef;
+                border-color: #52637b;
+            }
+
+            #allcommentsetting.zouryou-dark .ng_text label input:checked+span {
+                border-color: #69b6ed;
+            }
+
+            #allcommentsetting.zouryou-dark .ng_text label input+span span {
+                color: #e1e7ef;
+            }
+
+            #allcommentsetting.zouryou-dark :is(.list_comment, #ng_list ul li, .config_parts) {
+                border-bottom-color: #3a485b;
+            }
+
+            #allcommentsetting.zouryou-dark :is(#ng_list, #ng_list .ngform) {
+                border-color: #3a485b !important;
+            }
+
+            #allcommentsetting.zouryou-dark .settings-content a {
+                color: #8cc8f4;
+            }
+
+            #allcommentsetting.zouryou-dark #comment_list_exit path {
+                fill: #c3cfdf;
+            }
+
+            #allcommentsetting.zouryou-dark .scroll::-webkit-scrollbar-track {
+                background-color: #1d1d1d;
+            }
+
+            #allcommentsetting.zouryou-dark .scroll::-webkit-scrollbar-thumb {
+                background-color: #52637b;
+            }
+        </style>
         <div id="loading">
 
             <div
@@ -733,6 +770,20 @@
 
                 </div>
 
+                <div class="config_parts" style="padding-top:10px;">
+                    <div style="display:flex">
+                        <h3>コメント引用</h3>
+                    </div>
+                    <small>指定した動画のコメントも一緒に読み込みます。</small>
+                    <div id="video_citation_list"></div>
+                    <button type="button" id="add_video_citation" class="video-citation-button">sm番号から追加</button>
+                    <div style="margin-top:10px;">
+                        <button type="button" id="add_local_comment_files"
+                            class="video-citation-button">ローカルJSONから追加</button>
+                        <input id="local_comment_files" type="file" accept=".json,application/json" multiple hidden>
+                        <div id="local_comment_list"></div>
+                    </div>
+                </div>
                 <div class="config_parts" style="padding-top:10px;">
                     <div style="display:flex">
                         <h3>描画設定</h3>
