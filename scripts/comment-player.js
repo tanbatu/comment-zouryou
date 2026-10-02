@@ -1,6 +1,20 @@
 // コメント描画と映像合成の開始・終了を管理する。
 function load_NiconiComments() {
   console.log(COMMENT);
+  const fontConfig = {};
+  if (document.getElementById("comment_font")?.value === "meiryo") {
+    if (!NiconiComments.internal.definition.config.defaultConfig) {
+      NiconiComments.internal.definition.initConfig.initConfig();
+    }
+    const fonts = NiconiComments.internal.definition.config.defaultConfig.fonts;
+    fontConfig.fonts = {
+      ...fonts,
+      html5: {
+        ...fonts.html5,
+        defont: { ...fonts.html5.defont, font: '"メイリオ", Meiryo, sans-serif', weight: 700 },
+      },
+    };
+  }
   niconiComments?.destroy();
   niconiComments = undefined;
   niconiComments = new NiconiComments(zouryouCanvasElement, COMMENT, {
@@ -13,6 +27,7 @@ function load_NiconiComments() {
     showCommentCount: document.getElementById("isdebug").checked,
     showFPS: document.getElementById("isdebug").checked,
     config: {
+      ...fontConfig,
       contextStrokeOpacity: Number(document.getElementById("bar_stroke").value),
       contextLineWidth: 3.5,
     },

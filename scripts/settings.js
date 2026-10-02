@@ -170,6 +170,7 @@ function PREPARE(observe) {
           bar_alpha: 100,
           bar_fps: 30,
           keepCA: false,
+          comment_font: "default",
           mode: "html5",
           pip: false,
           auto: false,
@@ -202,6 +203,8 @@ function PREPARE(observe) {
       comment_opacity.value = zouryou_config.bar_alpha;
       pip.checked = zouryou_config.pip;
       keepCA.checked = zouryou_config.keepCA;
+      document.getElementById("comment_font").value =
+        zouryou_config.comment_font === "meiryo" ? "meiryo" : "default";
       auto.checked = zouryou_config.auto;
       fps.value = zouryou_config.bar_fps;
       auto_num.value = zouryou_config.auto_num;
@@ -459,6 +462,13 @@ function PREPARE(observe) {
     zouryou_config = JSON.parse(get_zouryou_config);
     zouryou_config.premium_filter = !zouryou_config.premium_filter;
     localStorage.setItem("zouryou_config", JSON.stringify(zouryou_config));
+  };
+
+  document.getElementById("comment_font").onchange = () => {
+    const config = JSON.parse(localStorage.getItem("zouryou_config") || "{}");
+    config.comment_font = document.getElementById("comment_font").value;
+    localStorage.setItem("zouryou_config", JSON.stringify(config));
+    if (niconiComments) load_NiconiComments();
   };
 
   for (let i = 0; i < val_stroke.length; i++) {
