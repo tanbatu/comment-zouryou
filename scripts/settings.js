@@ -500,14 +500,6 @@ function PREPARE(observe) {
     link.style.visibility = "visible";
     link.href = URL.createObjectURL(blob);
   });
-  document.getElementById("ismask").addEventListener("change", function () {
-    if (!this.checked) {
-      setTimeout(() => {
-        zouryouCanvasElement.style.setProperty("-webkit-mask-image", ``);
-      }, 100);
-    }
-  });
-
   document.getElementById("iscanvas").addEventListener("change", function () {
     syncCanvasVideo();
   });
