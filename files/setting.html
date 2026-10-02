@@ -7,6 +7,16 @@
 </head>
 
 <body>
+    <div id="allcommentsetting" style="
+    border-radius: 8px;
+        width: 100%;
+        height:700px;
+        background-color: white;
+        position: sticky;
+        display: none;
+        margin-bottom: 17px;
+      ">
+    <!-- 設定画面を別のサイドバーへ移しても、CSSを一緒に保持する。 -->
     <style>
         #allcommentsetting {
             font-family: "Helvetica Neue", Helvetica;
@@ -559,16 +569,86 @@
             width: 100%;
             padding: 13px 0;
         }
+        #allcommentsetting.zouryou-dark {
+            color-scheme: dark;
+            background-color: #1b1f22 !important;
+            color: #e1e7ef;
+            --zouryou-base-text-color: #e1e7ef !important;
+            --zouryou-nicoru-color: 117, 89, 20;
+        }
+
+        #allcommentsetting.zouryou-dark :is(.settings-content, .list_comment) {
+            color: #e1e7ef !important;
+        }
+
+        #allcommentsetting.zouryou-dark :is(.settings-footer, #wrapper_buttons, #comment_list, #comment_list_header) {
+            background-color: #252525 !important;
+            color: #e1e7ef;
+        }
+
+        #allcommentsetting.zouryou-dark .beforewave {
+            background: linear-gradient(180deg, #182c49 32%, #1e353b 100%);
+        }
+
+        #allcommentsetting.zouryou-dark .wave {
+            filter: brightness(0.3) saturate(0.65);
+        }
+
+        #allcommentsetting.zouryou-dark .wave-fade {
+            background: linear-gradient(#181e28, #181e2800) !important;
+        }
+
+        #allcommentsetting.zouryou-dark :is(.bg-gradient1 span, .bg-gradient1:before, #progress_bar) {
+            background: linear-gradient(120deg, #28466f, #256475) !important;
+        }
+
+        #allcommentsetting.zouryou-dark .wrapper_button button {
+            background: linear-gradient(149deg, #293448, #254a59);
+            color: #d9edf9;
+        }
+
+        #allcommentsetting.zouryou-dark .wrapper_button button:hover {
+            background: linear-gradient(149deg, #35496c, #306878);
+        }
+
+        #allcommentsetting.zouryou-dark :is(input:not(#load_num):not([type="range"]):not([type="checkbox"]), select, button:not(.wrapper_button button), .ng_text label input+span) {
+            background-color: #252f3e;
+            color: #e1e7ef;
+            border-color: #52637b;
+        }
+
+        #allcommentsetting.zouryou-dark .ng_text label input:checked+span {
+            border-color: #69b6ed;
+        }
+
+        #allcommentsetting.zouryou-dark .ng_text label input+span span {
+            color: #e1e7ef;
+        }
+
+        #allcommentsetting.zouryou-dark :is(.list_comment, #ng_list ul li, .config_parts) {
+            border-bottom-color: #3a485b;
+        }
+
+        #allcommentsetting.zouryou-dark :is(#ng_list, #ng_list .ngform) {
+            border-color: #3a485b !important;
+        }
+
+        #allcommentsetting.zouryou-dark .settings-content a {
+            color: #8cc8f4;
+        }
+
+        #allcommentsetting.zouryou-dark #comment_list_exit path {
+            fill: #c3cfdf;
+        }
+
+        #allcommentsetting.zouryou-dark .scroll::-webkit-scrollbar-track {
+            background-color: #1d1d1d;
+        }
+
+        #allcommentsetting.zouryou-dark .scroll::-webkit-scrollbar-thumb {
+            background-color: #52637b;
+        }
     </style>
-    <div id="allcommentsetting" style="
-    border-radius: 8px;
-        width: 100%;
-        height:700px;
-        background-color: white;
-        position: sticky;
-        display: none;
-        margin-bottom: 17px;
-      ">
         <div id="loading">
 
             <div
@@ -846,87 +926,7 @@
 
     </div>
     </div>
-    <style>
-        #allcommentsetting.zouryou-dark {
-            color-scheme: dark;
-            background-color: #1b1f22 !important;
-            color: #e1e7ef;
-            --zouryou-base-text-color: #e1e7ef;
-            --zouryou-nicoru-color: 117, 89, 20;
-        }
 
-        #allcommentsetting.zouryou-dark :is(.settings-content, .list_comment) {
-            color: #e1e7ef !important;
-        }
-
-        #allcommentsetting.zouryou-dark :is(.settings-footer, #wrapper_buttons, #comment_list, #comment_list_header) {
-            background-color: #252525 !important;
-            color: #e1e7ef;
-        }
-
-        #allcommentsetting.zouryou-dark .beforewave {
-            background: linear-gradient(180deg, #182c49 32%, #1e353b 100%);
-        }
-
-        #allcommentsetting.zouryou-dark .wave {
-            filter: brightness(0.3) saturate(0.65);
-        }
-
-        #allcommentsetting.zouryou-dark .wave-fade {
-            background: linear-gradient(#181e28, #181e2800) !important;
-        }
-
-        #allcommentsetting.zouryou-dark :is(.bg-gradient1 span, .bg-gradient1:before, #progress_bar) {
-            background: linear-gradient(120deg, #28466f, #256475) !important;
-        }
-
-        #allcommentsetting.zouryou-dark .wrapper_button button {
-            background: linear-gradient(149deg, #293448, #254a59);
-            color: #d9edf9;
-        }
-
-        #allcommentsetting.zouryou-dark .wrapper_button button:hover {
-            background: linear-gradient(149deg, #35496c, #306878);
-        }
-
-        #allcommentsetting.zouryou-dark :is(input:not(#load_num):not([type="range"]):not([type="checkbox"]), select, button:not(.wrapper_button button), .ng_text label input+span) {
-            background-color: #252f3e;
-            color: #e1e7ef;
-            border-color: #52637b;
-        }
-
-        #allcommentsetting.zouryou-dark .ng_text label input:checked+span {
-            border-color: #69b6ed;
-        }
-
-        #allcommentsetting.zouryou-dark .ng_text label input+span span {
-            color: #e1e7ef;
-        }
-
-        #allcommentsetting.zouryou-dark :is(.list_comment, #ng_list ul li, .config_parts) {
-            border-bottom-color: #3a485b;
-        }
-
-        #allcommentsetting.zouryou-dark :is(#ng_list, #ng_list .ngform) {
-            border-color: #3a485b !important;
-        }
-
-        #allcommentsetting.zouryou-dark .settings-content a {
-            color: #8cc8f4;
-        }
-
-        #allcommentsetting.zouryou-dark #comment_list_exit path {
-            fill: #c3cfdf;
-        }
-
-        #allcommentsetting.zouryou-dark .scroll::-webkit-scrollbar-track {
-            background-color: #1d1d1d;
-        }
-
-        #allcommentsetting.zouryou-dark .scroll::-webkit-scrollbar-thumb {
-            background-color: #52637b;
-        }
-    </style>
 </body>
 
 </html>
