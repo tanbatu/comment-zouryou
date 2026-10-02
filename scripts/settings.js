@@ -117,6 +117,20 @@ function PREPARE(observe) {
   OLD_TIME = document.getElementById("zenkome-time");
   const setting = document.getElementById("allcommentsetting");
   zouryouSetting = setting;
+  function syncSettingTheme() {
+    let dark = window.matchMedia("(prefers-color-scheme: dark)").matches;
+    // プレイヤー側の背景色を優先し、サイトのテーマ切り替えにも追従する。
+    for (let element = setting.parentElement; element; element = element.parentElement) {
+      const style = getComputedStyle(element);
+      const channels = style.backgroundColor.match(/[\d.]+/g)?.map(Number);
+      if (!channels || channels.length < 3 || (channels.length === 4 && channels[3] < 0.5)) continue;
+      const luminance = channels[0] * 0.2126 + channels[1] * 0.7152 + channels[2] * 0.0722;
+      dark = luminance < 128;
+      break;
+    }
+    setting.classList.toggle("zouryou-dark", dark);
+  }
+  syncSettingTheme();
 
   document.getElementsByClassName("ZenkomeCloseButton")[0].addEventListener(
     "click",
@@ -542,6 +556,7 @@ function PREPARE(observe) {
   }
   ShowButton();
   syncZouryouPlayer = () => {
+    syncSettingTheme();
     if (!isWatchPage() && !hasRetainedMintPlayer()) {
       (buttonWrapper || allButton)?.remove();
       setting.remove();

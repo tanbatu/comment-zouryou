@@ -313,7 +313,7 @@ function LIST_COMMENT() {
       commentElement.className = "list_comment";
       const row = document.createElement("div");
       row.style.cssText = "padding:0px 2px;display:flex";
-      row.style.backgroundColor = 'rgba(243, 186, 0, ' + Number(nicoru) / 10 + ')';
+      row.style.backgroundColor = 'rgba(var(--zouryou-nicoru-color, 243, 186, 0), ' + Number(nicoru) / 10 + ')';
       const bodyElement = document.createElement("p");
       bodyElement.style.width = "95%";
       bodyElement.textContent = body;
