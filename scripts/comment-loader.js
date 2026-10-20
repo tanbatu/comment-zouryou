@@ -1,9 +1,92 @@
 // 視聴情報とコメントを取得し、終了した取得処理の結果は破棄する。
 let commentLoadController;
+function parseWatchPage(html, videoId) {
+  const page = new DOMParser().parseFromString(html, "text/html");
+  const embedded = page
+    .querySelector('meta[name="server-response"]')
+    ?.getAttribute("content");
+  if (!embedded) {
+    throw new Error(
+      `${videoId}: 動画ページに視聴情報がありません。ログイン状態や動画の公開状態を確認してください。`,
+    );
+  }
+  let data;
+  try {
+    data = JSON.parse(embedded);
+  } catch {
+    throw new Error(`${videoId}: 動画ページの視聴情報を解析できませんでした。`);
+  }
+  return parseWatchData(data, videoId);
+}
+
+function parseWatchData(data, videoId) {
+  const response = data?.data?.response;
+  const currentData = response?.$watchV4?.data;
+  const sourceData = {
+    ...response,
+    ...currentData,
+    comment: currentData?.comment ?? response?.comment,
+    video: currentData?.video ?? response?.video,
+  };
+  const nvComment = sourceData.comment?.nvComment;
+  if (
+    (data?.meta?.status !== undefined && data.meta.status !== 200) ||
+    sourceData.video?.id !== videoId ||
+    typeof nvComment?.server !== "string" ||
+    !nvComment.server ||
+    typeof nvComment?.threadKey !== "string" ||
+    !nvComment.threadKey ||
+    !Array.isArray(nvComment?.params?.targets) ||
+    !nvComment.params.targets.length ||
+    nvComment.params.targets.some(
+      (target) => !target?.id || typeof target.fork !== "string",
+    ) ||
+    !Array.isArray(sourceData.comment?.threads)
+  ) {
+    throw new Error(
+      `${videoId}: コメント取得に必要な視聴情報がありません。ログイン状態や動画の公開状態を確認してください。`,
+    );
+  }
+  return sourceData;
+}
+
+async function fetchWatchData(videoId, fetch, checkLoad) {
+  const url = "https://www.nicovideo.jp/watch/" + videoId;
+  const errors = [];
+  // 現在有効なHTML方式を優先し、利用できなければ従来のJSON方式を試す。
+  for (const format of ["HTML", "JSON"]) {
+    try {
+      const response = await fetch(
+        format === "HTML" ? url : url + "?responseType=json",
+      );
+      if (response.status < 200 || response.status >= 300) {
+        throw new Error(`HTTP ${response.status}`);
+      }
+      const data =
+        format === "HTML"
+          ? parseWatchPage(await response.text(), videoId)
+          : parseWatchData(await response.json(), videoId);
+      checkLoad();
+      return data;
+    } catch (error) {
+      // 中止された取得では、別方式への切り替えを行わない。
+      checkLoad();
+      if (error.name === "AbortError") throw error;
+      errors.push(`${format}: ${error.message}`);
+    }
+  }
+  throw new Error(
+    `${videoId}: 動画情報の取得に失敗しました（${errors.join(" / ")}）。`,
+  );
+}
+
 function parseLocalComments(text) {
   const data = JSON.parse(text.replace(/^\uFEFF/, ""));
-  let threads = Array.isArray(data) ? data : data?.data?.threads ?? data?.threads;
-  if (!Array.isArray(threads)) throw new Error("対応するコメントJSON形式ではありません。");
+  let threads = Array.isArray(data)
+    ? data
+    : (data?.data?.threads ?? data?.threads);
+  if (!Array.isArray(threads))
+    throw new Error("対応するコメントJSON形式ではありません。");
   // コメントだけの配列も通常コメントとして扱う。
   if (threads.length && typeof threads[0]?.body === "string") {
     threads = [{ fork: "main", comments: threads }];
@@ -15,17 +98,32 @@ function parseLocalComments(text) {
     return {
       fork: thread.fork,
       comments: thread.comments.map((comment, index) => {
-        if (!comment || typeof comment.body !== "string" ||
-            !Number.isFinite(comment.vposMs) || comment.vposMs < 0 ||
-            (comment.commands !== undefined && (!Array.isArray(comment.commands) ||
-              comment.commands.some((command) => typeof command !== "string")))) {
-          throw new Error(`コメント${index + 1}の本文・再生位置・コマンドが正しくありません。`);
+        if (
+          !comment ||
+          typeof comment.body !== "string" ||
+          !Number.isFinite(comment.vposMs) ||
+          comment.vposMs < 0 ||
+          (comment.commands !== undefined &&
+            (!Array.isArray(comment.commands) ||
+              comment.commands.some((command) => typeof command !== "string")))
+        ) {
+          throw new Error(
+            `コメント${index + 1}の本文・再生位置・コマンドが正しくありません。`,
+          );
         }
         return {
-          id: "", no: index + 1, isMyPost: false, isPremium: false,
-          nicoruCount: 0, nicoruId: null, score: 0, source: "",
-          userId: "", postedAt: "1970-01-01T00:00:00Z",
-          ...comment, commands: comment.commands ?? [],
+          id: "",
+          no: index + 1,
+          isMyPost: false,
+          isPremium: false,
+          nicoruCount: 0,
+          nicoruId: null,
+          score: 0,
+          source: "",
+          userId: "",
+          postedAt: "1970-01-01T00:00:00Z",
+          ...comment,
+          commands: comment.commands ?? [],
         };
       }),
     };
@@ -91,7 +189,6 @@ async function LOADCOMMENT(mode) {
       "読み込み中";
     let LoadedCommentCount = 1,
       FailCount = 0;
-    const parser = new DOMParser();
 
     let match = location.href.match(/\/watch\/(sm\d+)/);
     if (match === null) {
@@ -99,16 +196,25 @@ async function LOADCOMMENT(mode) {
     }
 
     const files = [...localCommentFiles];
-    const citations = videoCitations
-      .filter((item) => item.videoId?.trim());
+    const citations = videoCitations.filter((item) => item.videoId?.trim());
     for (const item of citations) {
-      if (!/^sm\d+$/.test(item.videoId.trim()) ||
-          !Number.isSafeInteger(Number(item.multiplier)) || Number(item.multiplier) < 1) {
-        throw new Error("動画引用にはsm番号と1以上の整数の倍数を指定してください。");
+      if (
+        !/^sm\d+$/.test(item.videoId.trim()) ||
+        !Number.isSafeInteger(Number(item.multiplier)) ||
+        Number(item.multiplier) < 1
+      ) {
+        throw new Error(
+          "動画引用にはsm番号と1以上の整数の倍数を指定してください。",
+        );
       }
     }
-    const sources = [{ videoId: match[1], multiplier: Number(CommentLimit) },
-      ...citations.map((item) => ({ videoId: item.videoId.trim(), multiplier: Number(item.multiplier) }))];
+    const sources = [
+      { videoId: match[1], multiplier: Number(CommentLimit) },
+      ...citations.map((item) => ({
+        videoId: item.videoId.trim(),
+        multiplier: Number(item.multiplier),
+      })),
+    ];
     const ownerComments = [];
     const comments = [];
     // ファイルは取得開始時の選択を使い、形式を確認してから通信を開始する。
@@ -129,18 +235,7 @@ async function LOADCOMMENT(mode) {
     }
     for (const [sourceIndex, source] of sources.entries()) {
       const sourceLimit = source.multiplier;
-      const req = await fetch(
-        "https://www.nicovideo.jp/watch/" + source.videoId + "?responseType=json",
-      );
-      const data = await req.json();
-      const response = data?.data?.response;
-      const currentData = response?.$watchV4?.data;
-      const sourceData = {
-        ...response,
-        ...currentData,
-        comment: currentData?.comment ?? response?.comment,
-        video: currentData?.video ?? response?.video,
-      };
+      const sourceData = await fetchWatchData(source.videoId, fetch, checkLoad);
       if (sourceIndex === 0) apiData = sourceData;
 
       const joinObj = function (obj, fDelimiter, sDelimiter) {
@@ -314,7 +409,8 @@ async function LOADCOMMENT(mode) {
                 "【コメント増量】ログアウト状態です。ログインをして再度実行してください。",
               );
               document.getElementById("loading").style.display = "none";
-              document.getElementById("allcommentsetting").style.display = "none";
+              document.getElementById("allcommentsetting").style.display =
+                "none";
               isLoggedIn = false;
               j--;
               totalThreadCount /= 3;
@@ -336,7 +432,8 @@ async function LOADCOMMENT(mode) {
               break;
             }
             lastTime = Math.floor(
-              new Date(res.data.threads[0].comments[0].postedAt).getTime() / 1000,
+              new Date(res.data.threads[0].comments[0].postedAt).getTime() /
+                1000,
             );
             logger(
               `[${fetchedThreadCount + j}/${totalThreadCount}]: コメ番${
@@ -425,13 +522,30 @@ async function LOADCOMMENT(mode) {
         if (!isLoggedIn) break;
         fetchedThreadCount += sourceLimit;
       }
-      }
-      CommentLoadingScreenWrapper.style.background = `rgba(0, 0, 0, .9)`;
-      logger(comments.length + "件のコメントを読み込みました");
-      logger(`NG設定を適用しています`);
+    }
+    CommentLoadingScreenWrapper.style.background = `rgba(0, 0, 0, .9)`;
+    logger(comments.length + "件のコメントを読み込みました");
+    logger(`NG設定を適用しています`);
 
+    const filteredComments = await COMMENT_CONTROL(comments);
+    checkLoad();
+    COMMENT = [
+      {
+        commentCount: comments.length,
+        comments: filteredComments,
+        fork: "comment-zouryou",
+        id: 0,
+      },
+      {
+        commentCount: ownerComments.length,
+        comments: ownerComments, //投稿者コメントにフィルターを適用する?
+        fork: "owner",
+        id: 1,
+      },
+    ];
+    document.getElementById("reload_niconicomments").onclick = async () => {
       const filteredComments = await COMMENT_CONTROL(comments);
-      checkLoad();
+      if (controller.signal.aborted || !DRAW_) return;
       COMMENT = [
         {
           commentCount: comments.length,
@@ -446,36 +560,21 @@ async function LOADCOMMENT(mode) {
           id: 1,
         },
       ];
-      document.getElementById("reload_niconicomments").onclick = async () => {
-        const filteredComments = await COMMENT_CONTROL(comments);
-        if (controller.signal.aborted || !DRAW_) return;
-        COMMENT = [
-          {
-            commentCount: comments.length,
-            comments: filteredComments,
-            fork: "comment-zouryou",
-            id: 0,
-          },
-          {
-            commentCount: ownerComments.length,
-            comments: ownerComments, //投稿者コメントにフィルターを適用する?
-            fork: "owner",
-            id: 1,
-          },
-        ];
-        load_NiconiComments();
-        clearInterval(list_interval);
-        LIST_COMMENT();
-      };
+      load_NiconiComments();
+      clearInterval(list_interval);
+      LIST_COMMENT();
+    };
 
-      logger(`描画準備中`);
-      document.getElementById("progress_left").style.width = "0%";
-      PLAYCOMMENT();
-    } catch (error) {
-      if (controller.signal.aborted) return;
-      console.error("コメント取得に失敗しました", error);
-      logger(`コメント取得に失敗しました。${error.message || "再度お試しください。"}`);
-      loading.style.display = "none";
-      document.getElementById("zenkomebutton").disabled = false;
-    }
+    logger(`描画準備中`);
+    document.getElementById("progress_left").style.width = "0%";
+    PLAYCOMMENT();
+  } catch (error) {
+    if (controller.signal.aborted) return;
+    console.error("コメント取得に失敗しました", error);
+    logger(
+      `コメント取得に失敗しました。${error.message || "再度お試しください。"}`,
+    );
+    loading.style.display = "none";
+    document.getElementById("zenkomebutton").disabled = false;
   }
+}
