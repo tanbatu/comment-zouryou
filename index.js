@@ -117,4 +117,4 @@ fetch(index_html)
 // DOM変更のない履歴移動と遅れて生成されるプレイヤーにも対応する。
 setInterval(reconcileWatchPage, 500);
 window.addEventListener("popstate", reconcileWatchPage);
-console.log("✨コメント増量 v8.0\nCopyright (c) 2022 tanbatu.");
+console.log("✨コメント増量 v8.1\nCopyright (c) 2022 tanbatu.");
